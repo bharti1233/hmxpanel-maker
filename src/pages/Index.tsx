@@ -14,7 +14,7 @@ import FinalReveal from "@/components/birthday/FinalReveal";
 import { ChevronRight, ChevronLeft, Lock } from "lucide-react";
 
 // Configuration
-const BIRTHDAY_DATE = new Date("2025-08-29T00:00:00");
+const BIRTHDAY_DATE = new Date("2026-08-29T00:00:00");
 const RECIPIENT_NAME = "Dristi";
 const INSTAGRAM_LINK = "https://www.instagram.com/reel/DMPCXX_I8pO/?igsh=MWVzeXZhd3YzdnByNg==";
 const BIRTHDAY_IMAGE = "https://i.supaimg.com/3c6ca851-1689-4e6a-a7aa-6c30931afd1a.jpg";
@@ -94,7 +94,7 @@ const Index = () => {
                 ✨ A Queen's special day is on the way… Let's countdown to the magical moment! ✨
               </p>
               <p className="text-birthday-cyan font-display text-lg mt-4">
-                August 29, 2025
+                August 29, 2026
               </p>
             </motion.div>
 
