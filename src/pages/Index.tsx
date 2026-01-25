@@ -11,13 +11,10 @@ import VoiceMessage from "@/components/birthday/VoiceMessage";
 import WishVault from "@/components/birthday/WishVault";
 import BirthdayLetter from "@/components/birthday/BirthdayLetter";
 import FinalReveal from "@/components/birthday/FinalReveal";
+import MadeByBadge from "@/components/admin/MadeByBadge";
+import AdminPanel from "@/components/admin/AdminPanel";
+import { useAdmin } from "@/contexts/AdminContext";
 import { ChevronRight, ChevronLeft, Lock } from "lucide-react";
-
-// Configuration
-const BIRTHDAY_DATE = new Date("2026-08-29T00:00:00");
-const RECIPIENT_NAME = "Dristi";
-const INSTAGRAM_LINK = "https://www.instagram.com/reel/DMPCXX_I8pO/?igsh=MWVzeXZhd3YzdnByNg==";
-const BIRTHDAY_IMAGE = "https://i.supaimg.com/3c6ca851-1689-4e6a-a7aa-6c30931afd1a.jpg";
 
 const STEPS = [
   { label: "Countdown", icon: "⏰" },
@@ -34,18 +31,21 @@ type PageId = "countdown" | "star" | "memories" | "quiz" | "cake" | "letter" | "
 const Index = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isBirthdayUnlocked, setIsBirthdayUnlocked] = useState(false);
+  const { content, isUnlocked } = useAdmin();
+
+  const birthdayDate = new Date(content.birthdayDate);
 
   useEffect(() => {
-    // Check if birthday has arrived
+    // Check if birthday has arrived or if manually unlocked
     const checkBirthday = () => {
       const now = new Date();
-      setIsBirthdayUnlocked(now >= BIRTHDAY_DATE);
+      setIsBirthdayUnlocked(now >= birthdayDate || isUnlocked);
     };
     
     checkBirthday();
     const interval = setInterval(checkBirthday, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [birthdayDate, isUnlocked]);
 
   const pages: PageId[] = ["countdown", "star", "memories", "quiz", "cake", "letter", "final"];
 
@@ -63,11 +63,19 @@ const Index = () => {
 
   const canProceedFromCountdown = isBirthdayUnlocked;
 
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("en-US", { 
+      month: "long", 
+      day: "numeric", 
+      year: "numeric" 
+    });
+  };
+
   const renderPage = () => {
     const pageVariants = {
-      initial: { opacity: 0, y: 30 },
-      animate: { opacity: 1, y: 0 },
-      exit: { opacity: 0, y: -30 },
+      initial: { opacity: 0, y: 30, scale: 0.98 },
+      animate: { opacity: 1, y: 0, scale: 1 },
+      exit: { opacity: 0, y: -30, scale: 0.98 },
     };
 
     switch (pages[currentStep]) {
@@ -79,7 +87,7 @@ const Index = () => {
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
             className="min-h-screen flex flex-col items-center justify-center p-6"
           >
             <motion.div
@@ -88,19 +96,23 @@ const Index = () => {
               className="text-center mb-10"
             >
               <h1 className="text-4xl md:text-6xl font-display font-bold text-gradient mb-4">
-                🎉 Birthday Countdown 🎉
+                {content.countdownTitle}
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground max-w-lg mx-auto">
-                ✨ A Queen's special day is on the way… Let's countdown to the magical moment! ✨
+                {content.countdownSubtitle}
               </p>
               <p className="text-birthday-cyan font-display text-lg mt-4">
-                August 29, 2026
+                {formatDate(birthdayDate)}
               </p>
             </motion.div>
 
-            <div className="glass-card rounded-3xl p-6 md:p-10 w-full max-w-3xl">
+            <motion.div 
+              className="glass-card rounded-3xl p-6 md:p-10 w-full max-w-3xl"
+              whileHover={{ boxShadow: "0 30px 60px -15px hsl(320, 80%, 65%, 0.3)" }}
+              transition={{ duration: 0.3 }}
+            >
               <CountdownTimer 
-                targetDate={BIRTHDAY_DATE} 
+                targetDate={birthdayDate} 
                 onComplete={() => setIsBirthdayUnlocked(true)} 
               />
 
@@ -136,7 +148,7 @@ const Index = () => {
                   )}
                 </Button>
               </motion.div>
-            </div>
+            </motion.div>
           </motion.div>
         );
 
@@ -148,18 +160,23 @@ const Index = () => {
             initial="initial"
             animate="animate"
             exit="exit"
+            transition={{ duration: 0.5, ease: "easeOut" }}
             className="min-h-screen flex flex-col items-center justify-center p-6"
           >
             <div className="text-center mb-8">
               <h1 className="text-4xl md:text-5xl font-display font-bold text-gradient mb-4">
-                ⭐ Birthday Star ⭐
+                {content.starTitle}
               </h1>
               <p className="text-lg text-muted-foreground">
-                Celebrating the amazing person you are!
+                {content.starSubtitle}
               </p>
             </div>
 
-            <div className="glass-card rounded-3xl p-8 max-w-lg text-center">
+            <motion.div 
+              className="glass-card rounded-3xl p-8 max-w-lg text-center"
+              whileHover={{ y: -5, boxShadow: "0 30px 60px -15px hsl(320, 80%, 65%, 0.3)" }}
+              transition={{ duration: 0.3 }}
+            >
               <h2 className="text-2xl font-display text-birthday-cyan mb-6">
                 🌟 A Queen Deserves Her Day to Sparkle! 🌟
               </h2>
@@ -176,8 +193,8 @@ const Index = () => {
                 className="w-40 h-40 mx-auto mb-6 rounded-full overflow-hidden border-4 border-birthday-pink/30"
               >
                 <img
-                  src={BIRTHDAY_IMAGE}
-                  alt={`${RECIPIENT_NAME}'s photo`}
+                  src={content.birthdayImage}
+                  alt={`${content.recipientName}'s photo`}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
@@ -192,12 +209,11 @@ const Index = () => {
               </motion.div>
 
               <p className="text-muted-foreground mb-6">
-                🌸 Happy Birthday, beautiful soul! 💕 Today the universe shines brighter because it's YOUR day. 
-                You're not just the star, you're the whole sky filled with love, laughter, and light! 🌸
+                {content.starMessage}
               </p>
 
               <VoiceMessage />
-            </div>
+            </motion.div>
 
             <NavigationButtons />
           </motion.div>
@@ -211,9 +227,13 @@ const Index = () => {
             initial="initial"
             animate="animate"
             exit="exit"
+            transition={{ duration: 0.5, ease: "easeOut" }}
             className="min-h-screen py-20 px-6"
           >
-            <MemoryTimeline />
+            <MemoryTimeline 
+              title={content.memoriesTitle}
+              memories={content.memories}
+            />
             <NavigationButtons />
           </motion.div>
         );
@@ -226,14 +246,15 @@ const Index = () => {
             initial="initial"
             animate="animate"
             exit="exit"
+            transition={{ duration: 0.5, ease: "easeOut" }}
             className="min-h-screen flex flex-col items-center justify-center p-6"
           >
             <div className="text-center mb-8">
               <h1 className="text-4xl md:text-5xl font-display font-bold text-gradient mb-4">
-                🎯 Birthday Quiz 🎯
+                {content.quizTitle}
               </h1>
               <p className="text-lg text-muted-foreground">
-                How well do you know {RECIPIENT_NAME}?
+                {content.quizSubtitle}
               </p>
             </div>
 
@@ -256,23 +277,28 @@ const Index = () => {
             initial="initial"
             animate="animate"
             exit="exit"
+            transition={{ duration: 0.5, ease: "easeOut" }}
             className="min-h-screen flex flex-col items-center justify-center p-6"
           >
             <div className="text-center mb-8">
               <h1 className="text-4xl md:text-5xl font-display font-bold text-gradient mb-4">
-                🎂 Cake Cutting 🎂
+                {content.cakeTitle}
               </h1>
               <p className="text-lg text-muted-foreground">
-                Make a wish and celebrate!
+                {content.cakeSubtitle}
               </p>
             </div>
 
-            <div className="glass-card rounded-3xl p-8 md:p-12">
+            <motion.div 
+              className="glass-card rounded-3xl p-8 md:p-12"
+              whileHover={{ y: -5 }}
+              transition={{ duration: 0.3 }}
+            >
               <h2 className="text-2xl font-display text-birthday-pink text-center mb-8">
-                🎂 Make a Wish! 🎂
+                {content.cakeMessage}
               </h2>
               <Cake3D onComplete={goToNext} />
-            </div>
+            </motion.div>
 
             <div className="mt-8">
               <Button variant="ghost" onClick={goToPrev} className="gap-2">
@@ -291,18 +317,23 @@ const Index = () => {
             initial="initial"
             animate="animate"
             exit="exit"
+            transition={{ duration: 0.5, ease: "easeOut" }}
             className="min-h-screen py-20 px-6"
           >
             <div className="text-center mb-12">
               <h1 className="text-4xl md:text-5xl font-display font-bold text-gradient mb-4">
-                💌 Birthday Letter 💌
+                {content.letterTitle}
               </h1>
               <p className="text-lg text-muted-foreground">
-                A letter filled with love, just for you.
+                {content.letterSubtitle}
               </p>
             </div>
 
-            <BirthdayLetter recipientName={RECIPIENT_NAME} senderName="HMXPANEL" />
+            <BirthdayLetter 
+              recipientName={content.recipientName} 
+              senderName={content.senderName}
+              letterContent={content.letterContent}
+            />
             
             <div className="max-w-3xl mx-auto mt-12">
               <WishVault />
@@ -320,9 +351,15 @@ const Index = () => {
             initial="initial"
             animate="animate"
             exit="exit"
+            transition={{ duration: 0.5, ease: "easeOut" }}
             className="min-h-screen flex flex-col items-center justify-center p-6"
           >
-            <FinalReveal recipientName={RECIPIENT_NAME} instagramLink={INSTAGRAM_LINK} />
+            <FinalReveal 
+              recipientName={content.recipientName} 
+              instagramLink={content.instagramLink}
+              title={content.finalTitle}
+              message={content.finalMessage}
+            />
             
             <div className="mt-8">
               <Button variant="ghost" onClick={goToPrev} className="gap-2">
@@ -378,6 +415,12 @@ const Index = () => {
       <AnimatePresence mode="wait">
         {renderPage()}
       </AnimatePresence>
+
+      {/* Made by hmxpanel badge - shows on all pages */}
+      <MadeByBadge showUnlockOption={!isBirthdayUnlocked} />
+
+      {/* Admin Panel */}
+      <AdminPanel />
     </div>
   );
 };
