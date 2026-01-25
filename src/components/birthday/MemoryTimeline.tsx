@@ -6,7 +6,12 @@ interface Memory {
   emoji: string;
 }
 
-const memories: Memory[] = [
+interface MemoryTimelineProps {
+  title?: string;
+  memories?: Memory[];
+}
+
+const defaultMemories: Memory[] = [
   {
     title: "The Day We First Met",
     description: "That moment when our paths crossed and a beautiful friendship began 💫",
@@ -39,7 +44,10 @@ const memories: Memory[] = [
   },
 ];
 
-const MemoryTimeline = () => {
+const MemoryTimeline = ({ 
+  title = "✨ Our Journey Together ✨",
+  memories = defaultMemories 
+}: MemoryTimelineProps) => {
   return (
     <div className="max-w-2xl mx-auto py-8">
       <motion.h2
@@ -48,7 +56,7 @@ const MemoryTimeline = () => {
         viewport={{ once: true }}
         className="text-3xl md:text-4xl font-display font-bold text-center text-gradient mb-12"
       >
-        ✨ Our Journey Together ✨
+        {title}
       </motion.h2>
 
       <div className="relative">
