@@ -3,21 +3,11 @@ import { motion } from "framer-motion";
 interface BirthdayLetterProps {
   recipientName?: string;
   senderName?: string;
-  letterContent?: string[];
 }
-
-const defaultContent = [
-  "Happy Birthday, bestie! 🎉 Today is all about celebrating YOU – the laughter you bring, the craziness we share, and the countless memories that make our friendship so special. 💕",
-  "From silly jokes to endless talks, you've been a constant source of happiness in my life. 🌸 Thank you for always being the kind, caring, and wonderful person that you are.",
-  "On this special day, I wish you loads of happiness, unlimited cake, and all the success your heart desires. 🎂✨",
-  "May this year bring you new adventures, exciting opportunities, and moments that you'll never forget. Because honestly, you deserve nothing less than the absolute best. 🌟",
-  "Keep shining, keep smiling, and never forget that your friends will always be here to cheer you on. 💖",
-];
 
 const BirthdayLetter = ({ 
   recipientName = "Dristi", 
-  senderName = "Your Friend",
-  letterContent = defaultContent
+  senderName = "Your Friend" 
 }: BirthdayLetterProps) => {
   return (
     <motion.div
@@ -54,16 +44,48 @@ const BirthdayLetter = ({
           </motion.h2>
 
           <div className="space-y-6 text-lg leading-relaxed text-foreground/90">
-            {letterContent.map((paragraph, index) => (
-              <motion.p
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + index * 0.1 }}
-              >
-                {paragraph}
-              </motion.p>
-            ))}
+            <motion.p
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              Happy Birthday, bestie! 🎉 Today is all about celebrating <strong className="text-birthday-pink">YOU</strong> – 
+              the laughter you bring, the craziness we share, and the countless memories that make our friendship so special. 💕
+            </motion.p>
+
+            <motion.p
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              From silly jokes to endless talks, you've been a constant source of happiness in my life. 🌸 
+              Thank you for always being the kind, caring, and wonderful person that you are.
+            </motion.p>
+
+            <motion.p
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              On this special day, I wish you loads of happiness, unlimited cake, and all the success your heart desires. 🎂✨
+            </motion.p>
+
+            <motion.p
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.7 }}
+            >
+              May this year bring you new adventures, exciting opportunities, and moments that you'll never forget. 
+              Because honestly, you deserve nothing less than the <em className="text-birthday-gold">absolute best</em>. 🌟
+            </motion.p>
+
+            <motion.p
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.8 }}
+            >
+              Keep shining, keep smiling, and never forget that your friends will always be here to cheer you on. 💖
+            </motion.p>
           </div>
 
           <motion.div
