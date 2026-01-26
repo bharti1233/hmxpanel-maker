@@ -4,42 +4,23 @@ interface Memory {
   title: string;
   description: string;
   emoji: string;
+  imageUrl?: string;
 }
 
-const memories: Memory[] = [
-  {
-    title: "The Day We First Met",
-    description: "That moment when our paths crossed and a beautiful friendship began 💫",
-    emoji: "👋",
-  },
-  {
-    title: "Our Endless Conversations",
-    description: "Hours of talking, laughing, and sharing our deepest thoughts 💬",
-    emoji: "💭",
-  },
-  {
-    title: "The Funniest Memory",
-    description: "Remember when we couldn't stop laughing? Those are the best moments! 😂",
-    emoji: "🤣",
-  },
-  {
-    title: "Supporting Each Other",
-    description: "Through thick and thin, we've always had each other's backs 🤝",
-    emoji: "💪",
-  },
-  {
-    title: "Adventures Together",
-    description: "Every moment with you turns into an unforgettable adventure ✨",
-    emoji: "🌟",
-  },
-  {
-    title: "Today & Forever",
-    description: "Celebrating you today and cherishing our friendship always 💖",
-    emoji: "🎂",
-  },
+interface MemoryTimelineProps {
+  memories?: Memory[];
+}
+
+const defaultMemories: Memory[] = [
+  { title: "The Day We First Met", description: "That moment when our paths crossed and a beautiful friendship began 💫", emoji: "👋" },
+  { title: "Our Endless Conversations", description: "Hours of talking, laughing, and sharing our deepest thoughts 💬", emoji: "💭" },
+  { title: "The Funniest Memory", description: "Remember when we couldn't stop laughing? Those are the best moments! 😂", emoji: "🤣" },
+  { title: "Supporting Each Other", description: "Through thick and thin, we've always had each other's backs 🤝", emoji: "💪" },
+  { title: "Adventures Together", description: "Every moment with you turns into an unforgettable adventure ✨", emoji: "🌟" },
+  { title: "Today & Forever", description: "Celebrating you today and cherishing our friendship always 💖", emoji: "🎂" },
 ];
 
-const MemoryTimeline = () => {
+const MemoryTimeline = ({ memories = defaultMemories }: MemoryTimelineProps) => {
   return (
     <div className="max-w-2xl mx-auto py-8">
       <motion.h2
