@@ -9,7 +9,13 @@ interface Question {
   correct: number;
 }
 
-const questions: Question[] = [
+interface BirthdayQuizProps {
+  onComplete?: () => void;
+  questions?: Question[];
+  recipientName?: string;
+}
+
+const defaultQuestions: Question[] = [
   {
     question: "What makes Dristi smile the most?",
     options: ["Kind words", "Good food", "Quality time", "All of the above! 💖"],
@@ -27,11 +33,11 @@ const questions: Question[] = [
   },
 ];
 
-interface BirthdayQuizProps {
-  onComplete?: () => void;
-}
-
-const BirthdayQuiz = ({ onComplete }: BirthdayQuizProps) => {
+const BirthdayQuiz = ({ 
+  onComplete, 
+  questions = defaultQuestions,
+  recipientName = "Dristi" 
+}: BirthdayQuizProps) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -63,14 +69,14 @@ const BirthdayQuiz = ({ onComplete }: BirthdayQuizProps) => {
     if (score === questions.length) {
       return {
         emoji: "🏆",
-        title: "You know her too well!",
+        title: `You know ${recipientName} too well!`,
         message: "You're truly an amazing friend! 💖",
       };
     } else if (score >= questions.length / 2) {
       return {
         emoji: "🌟",
         title: "Great job!",
-        message: "You really care about her! 💕",
+        message: `You really care about ${recipientName}! 💕`,
       };
     } else {
       return {

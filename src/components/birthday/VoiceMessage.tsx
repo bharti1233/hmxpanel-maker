@@ -1,21 +1,47 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Volume2, VolumeX, Heart } from "lucide-react";
+import { Volume2, VolumeX, Heart, Pause, Play } from "lucide-react";
 
-const VoiceMessage = () => {
+interface VoiceMessageProps {
+  audioUrl?: string;
+}
+
+const VoiceMessage = ({ audioUrl }: VoiceMessageProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (audioUrl) {
+      audioRef.current = new Audio(audioUrl);
+      audioRef.current.addEventListener('ended', () => setIsPlaying(false));
+      
+      return () => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.removeEventListener('ended', () => setIsPlaying(false));
+        }
+      };
+    }
+  }, [audioUrl]);
 
   const handlePlay = () => {
-    // Since we don't have an actual audio file, we'll simulate the experience
-    setIsPlaying(true);
-    setHasPlayed(true);
-    
-    // Simulate audio playing for 5 seconds
-    setTimeout(() => {
-      setIsPlaying(false);
-    }, 5000);
+    if (audioUrl && audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current.play();
+        setIsPlaying(true);
+        setHasPlayed(true);
+      }
+    } else {
+      // Simulate playback when no URL provided
+      setIsPlaying(true);
+      setHasPlayed(true);
+      setTimeout(() => setIsPlaying(false), 5000);
+    }
   };
 
   return (
@@ -79,27 +105,28 @@ const VoiceMessage = () => {
 
       <Button
         onClick={handlePlay}
-        disabled={isPlaying}
         variant="birthday"
         size="lg"
         className="gap-2"
       >
         {isPlaying ? (
           <>
-            <VolumeX className="w-5 h-5" />
-            Playing...
+            <Pause className="w-5 h-5" />
+            Pause
           </>
         ) : (
           <>
-            <Volume2 className="w-5 h-5" />
+            <Play className="w-5 h-5" />
             {hasPlayed ? "Play Again" : "Play Message"}
           </>
         )}
       </Button>
 
-      <p className="text-xs text-muted-foreground mt-4">
-        💡 Tip: Upload your own voice recording for a personal touch!
-      </p>
+      {!audioUrl && (
+        <p className="text-xs text-muted-foreground mt-4">
+          💡 Tip: Upload your own voice recording for a personal touch!
+        </p>
+      )}
     </motion.div>
   );
 };

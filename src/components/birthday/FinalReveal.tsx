@@ -7,11 +7,13 @@ import { ExternalLink, Heart, Star, Sparkles } from "lucide-react";
 interface FinalRevealProps {
   recipientName?: string;
   instagramLink?: string;
+  message?: string;
 }
 
 const FinalReveal = ({ 
   recipientName = "Dristi",
-  instagramLink = "https://www.instagram.com"
+  instagramLink = "https://www.instagram.com",
+  message = "May your day be filled with joy, laughter, and all the love in the world!"
 }: FinalRevealProps) => {
   const [isRevealed, setIsRevealed] = useState(false);
 
@@ -98,7 +100,7 @@ const FinalReveal = ({
               transition={{ delay: 0.7 }}
               className="text-xl text-muted-foreground max-w-lg mx-auto mb-4"
             >
-              May your day be filled with joy, laughter, and all the love in the world! 
+              {message}
             </motion.p>
 
             <motion.p
