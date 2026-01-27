@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import MemoryTimelineEditor from "./MemoryTimelineEditor";
 import {
   X, Save, Eye, RotateCcw, User, Calendar, Image, MessageSquare,
   Layout, Cake, Heart, Trash2, Plus, GripVertical, Music, Link
@@ -30,7 +31,15 @@ const AdminPanel = () => {
   };
 
   const addMemory = () => {
-    handleChange("memories", [...config.memories, { title: "New Memory", description: "Description...", emoji: "✨" }]);
+    const newMemory: MemoryItem = {
+      id: `m${Date.now()}`,
+      title: "New Memory",
+      description: "Description...",
+      emoji: "✨",
+      mediaType: "none",
+      mediaUrl: "",
+    };
+    handleChange("memories", [...config.memories, newMemory]);
   };
 
   const removeMemory = (index: number) => {
@@ -308,53 +317,11 @@ const AdminPanel = () => {
               </div>
 
               {/* Memories */}
-              <div className="glass-card rounded-2xl p-6 space-y-4">
-                <h3 className="font-display font-semibold">Memory Timeline</h3>
-                <div className="space-y-4">
-                  {config.memories.map((memory, index) => (
-                    <div key={index} className="p-4 bg-muted/50 rounded-xl space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Memory {index + 1}</span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeMemory(index)}
-                          className="text-destructive h-8 w-8"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-[60px_1fr] gap-3">
-                        <div>
-                          <Label>Emoji</Label>
-                          <Input
-                            value={memory.emoji}
-                            onChange={(e) => handleMemoryChange(index, "emoji", e.target.value)}
-                            className="text-center text-xl"
-                          />
-                        </div>
-                        <div>
-                          <Label>Title</Label>
-                          <Input
-                            value={memory.title}
-                            onChange={(e) => handleMemoryChange(index, "title", e.target.value)}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label>Description</Label>
-                        <Textarea
-                          value={memory.description}
-                          onChange={(e) => handleMemoryChange(index, "description", e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                  <Button variant="outline" onClick={addMemory} className="gap-2 w-full">
-                    <Plus className="w-4 h-4" />
-                    Add Memory
-                  </Button>
-                </div>
+              <div className="glass-card rounded-2xl p-6">
+                <MemoryTimelineEditor
+                  memories={config.memories}
+                  onChange={(newMemories) => handleChange("memories", newMemories)}
+                />
               </div>
             </TabsContent>
 
