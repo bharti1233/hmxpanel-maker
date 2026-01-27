@@ -1,11 +1,15 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 // Types
+export type MediaType = "none" | "image" | "video";
+
 export interface MemoryItem {
+  id: string;
   title: string;
   description: string;
   emoji: string;
-  imageUrl?: string;
+  mediaType: MediaType;
+  mediaUrl: string;
 }
 
 export interface LetterParagraph {
@@ -104,12 +108,12 @@ const defaultConfig: SiteConfig = {
   finalRevealMessage: "May your day be filled with joy, laughter, and all the love in the world!",
   
   memories: [
-    { title: "The Day We First Met", description: "That moment when our paths crossed and a beautiful friendship began 💫", emoji: "👋" },
-    { title: "Our Endless Conversations", description: "Hours of talking, laughing, and sharing our deepest thoughts 💬", emoji: "💭" },
-    { title: "The Funniest Memory", description: "Remember when we couldn't stop laughing? Those are the best moments! 😂", emoji: "🤣" },
-    { title: "Supporting Each Other", description: "Through thick and thin, we've always had each other's backs 🤝", emoji: "💪" },
-    { title: "Adventures Together", description: "Every moment with you turns into an unforgettable adventure ✨", emoji: "🌟" },
-    { title: "Today & Forever", description: "Celebrating you today and cherishing our friendship always 💖", emoji: "🎂" },
+    { id: "m1", title: "The Day We First Met", description: "That moment when our paths crossed and a beautiful friendship began 💫", emoji: "👋", mediaType: "none", mediaUrl: "" },
+    { id: "m2", title: "Our Endless Conversations", description: "Hours of talking, laughing, and sharing our deepest thoughts 💬", emoji: "💭", mediaType: "none", mediaUrl: "" },
+    { id: "m3", title: "The Funniest Memory", description: "Remember when we couldn't stop laughing? Those are the best moments! 😂", emoji: "🤣", mediaType: "none", mediaUrl: "" },
+    { id: "m4", title: "Supporting Each Other", description: "Through thick and thin, we've always had each other's backs 🤝", emoji: "💪", mediaType: "none", mediaUrl: "" },
+    { id: "m5", title: "Adventures Together", description: "Every moment with you turns into an unforgettable adventure ✨", emoji: "🌟", mediaType: "none", mediaUrl: "" },
+    { id: "m6", title: "Today & Forever", description: "Celebrating you today and cherishing our friendship always 💖", emoji: "🎂", mediaType: "none", mediaUrl: "" },
   ],
   
   quizQuestions: [
