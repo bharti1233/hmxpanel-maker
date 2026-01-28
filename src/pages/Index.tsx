@@ -20,7 +20,7 @@ type PageId = "countdown" | "star" | "memories" | "quiz" | "cake" | "letter" | "
 
 const Index = () => {
   const { state } = useAdmin();
-  const { config, isAdminMode, isPreviewMode } = state;
+  const { config, isAdminMode, isPreviewMode, isLoading } = state;
 
   const [currentStep, setCurrentStep] = useState(0);
   const [isBirthdayUnlocked, setIsBirthdayUnlocked] = useState(false);
@@ -402,6 +402,26 @@ const Index = () => {
         return null;
     }
   };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 mx-auto mb-4 rounded-full border-4 border-birthday-pink/30 border-t-birthday-pink"
+          />
+          <p className="text-muted-foreground">Loading magic...</p>
+        </motion.div>
+      </div>
+    );
+  }
 
   // Show admin panel when in admin mode
   if (isAdminMode) {
