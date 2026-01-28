@@ -278,7 +278,7 @@ const AdminPanel = () => {
                 <div>
                   <Label>Paragraphs</Label>
                   <div className="space-y-3 mt-2">
-                    {config.letterParagraphs.map((paragraph, index) => (
+                    {(config.letterParagraphs || []).map((paragraph, index) => (
                       <div key={paragraph.id} className="flex gap-2">
                         <GripVertical className="w-4 h-4 text-muted-foreground mt-3 cursor-move" />
                         <Textarea
@@ -458,7 +458,7 @@ const AdminPanel = () => {
               <div className="glass-card rounded-2xl p-6 space-y-4">
                 <h3 className="font-display font-semibold">Quiz Questions</h3>
                 <div className="space-y-4">
-                  {config.quizQuestions.map((q, qIndex) => (
+                  {(config.quizQuestions || []).map((q, qIndex) => (
                     <div key={qIndex} className="p-4 bg-muted/50 rounded-xl space-y-3">
                       <div>
                         <Label>Question {qIndex + 1}</Label>
