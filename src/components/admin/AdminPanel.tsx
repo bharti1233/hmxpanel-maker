@@ -11,12 +11,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import MemoryTimelineEditor from "./MemoryTimelineEditor";
 import {
   X, Save, Eye, RotateCcw, User, Calendar, Image, MessageSquare,
-  Layout, Cake, Heart, Trash2, Plus, GripVertical, Music, Link
+  Layout, Cake, Heart, Trash2, Plus, GripVertical, Music, Link, Cloud, CloudOff
 } from "lucide-react";
 
 const AdminPanel = () => {
   const { state, setAdminMode, setPreviewMode, updateConfig, resetConfig, clearWishVault } = useAdmin();
-  const { config } = state;
+  const { config, isSyncing } = state;
   const [hasChanges, setHasChanges] = useState(false);
 
   const handleChange = <K extends keyof typeof config>(key: K, value: typeof config[K]) => {
@@ -94,7 +94,24 @@ const AdminPanel = () => {
           </div>
           <div>
             <h1 className="font-display font-bold text-lg">Admin Panel</h1>
-            <p className="text-xs text-muted-foreground">Edit site content</p>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {isSyncing ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Cloud className="w-3 h-3 text-birthday-cyan" />
+                  </motion.div>
+                  <span className="text-birthday-cyan">Syncing...</span>
+                </>
+              ) : (
+                <>
+                  <Cloud className="w-3 h-3 text-green-500" />
+                  <span className="text-green-500">Real-time sync active</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
 

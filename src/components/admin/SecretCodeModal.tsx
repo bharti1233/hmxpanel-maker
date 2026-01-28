@@ -21,14 +21,12 @@ const SecretCodeModal = ({ isOpen, onClose }: SecretCodeModalProps) => {
     setError("");
 
     if (validateAdminCode(code)) {
-      if (!canAccessAdmin()) {
-        setError("Access unavailable");
-        return;
-      }
+      // Admin access is always available (permanent)
       setAdminMode(true);
       onClose();
       setCode("");
     } else if (validatePreviewCode(code)) {
+      // Preview mode may be restricted after birthday
       setPreviewMode(true);
       onClose();
       setCode("");

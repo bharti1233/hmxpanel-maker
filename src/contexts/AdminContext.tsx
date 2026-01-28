@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 // Types
 export type MediaType = "none" | "image" | "video";
@@ -64,6 +65,8 @@ export interface AdminState {
   isAdminMode: boolean;
   isPreviewMode: boolean;
   config: SiteConfig;
+  isLoading: boolean;
+  isSyncing: boolean;
 }
 
 interface AdminContextType {
@@ -78,49 +81,32 @@ interface AdminContextType {
 
 const ADMIN_CODE = "4157";
 const PREVIEW_CODE = "preview";
-const CONFIG_STORAGE_KEY = "birthday_site_config";
 
 const defaultConfig: SiteConfig = {
-  recipientName: "Dristi",
-  birthdayDate: "2026-08-29T00:00:00",
-  timezone: "Asia/Kolkata",
+  recipientName: "Birthday Star",
+  birthdayDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+  timezone: "UTC",
   
-  profileImageUrl: "https://i.supaimg.com/3c6ca851-1689-4e6a-a7aa-6c30931afd1a.jpg",
+  profileImageUrl: "",
   voiceMessageUrl: "",
   backgroundMusicUrl: "",
-  instagramLink: "https://www.instagram.com/reel/DMPCXX_I8pO/?igsh=MWVzeXZhd3YzdnByNg==",
+  instagramLink: "",
   
   countdownTitle: "🎉 Birthday Countdown 🎉",
-  countdownSubtitle: "✨ A Queen's special day is on the way… Let's countdown to the magical moment! ✨",
-  starPageMessage: "🌸 Happy Birthday, beautiful soul! 💕 Today the universe shines brighter because it's YOUR day. You're not just the star, you're the whole sky filled with love, laughter, and light! 🌸",
+  countdownSubtitle: "✨ A special day is on the way… Let's countdown to the magical moment! ✨",
+  starPageMessage: "🌸 Happy Birthday, beautiful soul! 💕 Today the universe shines brighter because it's YOUR day. 🌸",
   cakePageTitle: "🎂 Cake Cutting 🎂",
   cakePageSubtitle: "Make a wish and celebrate!",
   letterTitle: "💌 To My Amazing Friend",
   letterParagraphs: [
-    { id: "1", content: "Happy Birthday, bestie! 🎉 Today is all about celebrating YOU – the laughter you bring, the craziness we share, and the countless memories that make our friendship so special. 💕" },
-    { id: "2", content: "From silly jokes to endless talks, you've been a constant source of happiness in my life. 🌸 Thank you for always being the kind, caring, and wonderful person that you are." },
-    { id: "3", content: "On this special day, I wish you loads of happiness, unlimited cake, and all the success your heart desires. 🎂✨" },
-    { id: "4", content: "May this year bring you new adventures, exciting opportunities, and moments that you'll never forget. Because honestly, you deserve nothing less than the absolute best. 🌟" },
-    { id: "5", content: "Keep shining, keep smiling, and never forget that your friends will always be here to cheer you on. 💖" },
+    { id: "1", content: "Happy Birthday! 🎉 Today is all about celebrating YOU!" },
   ],
   letterSignature: "With loads of love & friendship,",
   senderName: "HMXPANEL",
   finalRevealMessage: "May your day be filled with joy, laughter, and all the love in the world!",
   
-  memories: [
-    { id: "m1", title: "The Day We First Met", description: "That moment when our paths crossed and a beautiful friendship began 💫", emoji: "👋", mediaType: "none", mediaUrl: "" },
-    { id: "m2", title: "Our Endless Conversations", description: "Hours of talking, laughing, and sharing our deepest thoughts 💬", emoji: "💭", mediaType: "none", mediaUrl: "" },
-    { id: "m3", title: "The Funniest Memory", description: "Remember when we couldn't stop laughing? Those are the best moments! 😂", emoji: "🤣", mediaType: "none", mediaUrl: "" },
-    { id: "m4", title: "Supporting Each Other", description: "Through thick and thin, we've always had each other's backs 🤝", emoji: "💪", mediaType: "none", mediaUrl: "" },
-    { id: "m5", title: "Adventures Together", description: "Every moment with you turns into an unforgettable adventure ✨", emoji: "🌟", mediaType: "none", mediaUrl: "" },
-    { id: "m6", title: "Today & Forever", description: "Celebrating you today and cherishing our friendship always 💖", emoji: "🎂", mediaType: "none", mediaUrl: "" },
-  ],
-  
-  quizQuestions: [
-    { question: "What makes Dristi smile the most?", options: ["Kind words", "Good food", "Quality time", "All of the above! 💖"], correct: 3 },
-    { question: "What's the best way to celebrate her?", options: ["Throw a surprise party", "Write heartfelt wishes", "Give her cake", "Just be there for her"], correct: 3 },
-    { question: "What makes today special?", options: ["It's just another day", "It's DRISTI'S BIRTHDAY! 🎂", "Nothing much", "I forgot..."], correct: 1 },
-  ],
+  memories: [],
+  quizQuestions: [],
   
   showMemoryTimeline: true,
   showVoiceMessage: true,
@@ -128,57 +114,215 @@ const defaultConfig: SiteConfig = {
   showFinalReveal: true,
 };
 
+// Helper to convert database row to SiteConfig
+const dbToConfig = (row: any): SiteConfig => ({
+  recipientName: row.recipient_name,
+  birthdayDate: row.birthday_date,
+  timezone: row.timezone,
+  profileImageUrl: row.profile_image_url || "",
+  voiceMessageUrl: row.voice_message_url || "",
+  backgroundMusicUrl: row.background_music_url || "",
+  instagramLink: row.instagram_link || "",
+  countdownTitle: row.countdown_title,
+  countdownSubtitle: row.countdown_subtitle,
+  starPageMessage: row.star_page_message,
+  cakePageTitle: row.cake_page_title,
+  cakePageSubtitle: row.cake_page_subtitle,
+  letterTitle: row.letter_title,
+  letterParagraphs: row.letter_paragraphs as LetterParagraph[],
+  letterSignature: row.letter_signature,
+  senderName: row.sender_name,
+  finalRevealMessage: row.final_reveal_message,
+  memories: row.memories as MemoryItem[],
+  quizQuestions: row.quiz_questions as QuizQuestion[],
+  showMemoryTimeline: row.show_memory_timeline,
+  showVoiceMessage: row.show_voice_message,
+  showWishVault: row.show_wish_vault,
+  showFinalReveal: row.show_final_reveal,
+});
+
+// Helper to convert SiteConfig to database format
+const configToDb = (config: Partial<SiteConfig>): Record<string, any> => {
+  const mapping: Record<string, string> = {
+    recipientName: "recipient_name",
+    birthdayDate: "birthday_date",
+    timezone: "timezone",
+    profileImageUrl: "profile_image_url",
+    voiceMessageUrl: "voice_message_url",
+    backgroundMusicUrl: "background_music_url",
+    instagramLink: "instagram_link",
+    countdownTitle: "countdown_title",
+    countdownSubtitle: "countdown_subtitle",
+    starPageMessage: "star_page_message",
+    cakePageTitle: "cake_page_title",
+    cakePageSubtitle: "cake_page_subtitle",
+    letterTitle: "letter_title",
+    letterParagraphs: "letter_paragraphs",
+    letterSignature: "letter_signature",
+    senderName: "sender_name",
+    finalRevealMessage: "final_reveal_message",
+    memories: "memories",
+    quizQuestions: "quiz_questions",
+    showMemoryTimeline: "show_memory_timeline",
+    showVoiceMessage: "show_voice_message",
+    showWishVault: "show_wish_vault",
+    showFinalReveal: "show_final_reveal",
+  };
+
+  const dbData: Record<string, any> = {};
+  for (const [key, value] of Object.entries(config)) {
+    if (mapping[key]) {
+      dbData[mapping[key]] = value;
+    }
+  }
+  return dbData;
+};
+
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export const AdminProvider = ({ children }: { children: ReactNode }) => {
-  const [state, setState] = useState<AdminState>(() => {
-    // Load config from localStorage
-    const savedConfig = localStorage.getItem(CONFIG_STORAGE_KEY);
-    return {
-      isAdminMode: false,
-      isPreviewMode: false,
-      config: savedConfig ? { ...defaultConfig, ...JSON.parse(savedConfig) } : defaultConfig,
-    };
+  const [state, setState] = useState<AdminState>({
+    isAdminMode: false,
+    isPreviewMode: false,
+    config: defaultConfig,
+    isLoading: true,
+    isSyncing: false,
   });
 
-  // Save config to localStorage whenever it changes
+  // Fetch config from database on mount
   useEffect(() => {
-    localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(state.config));
-  }, [state.config]);
+    const fetchConfig = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("site_config")
+          .select("*")
+          .eq("config_key", "main")
+          .maybeSingle();
 
-  const canAccessAdmin = (): boolean => {
+        if (error) {
+          console.error("Error fetching config:", error);
+          setState(prev => ({ ...prev, isLoading: false }));
+          return;
+        }
+
+        if (data) {
+          setState(prev => ({
+            ...prev,
+            config: dbToConfig(data),
+            isLoading: false,
+          }));
+        } else {
+          setState(prev => ({ ...prev, isLoading: false }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch config:", err);
+        setState(prev => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    fetchConfig();
+  }, []);
+
+  // Subscribe to real-time updates
+  useEffect(() => {
+    const channel = supabase
+      .channel("site_config_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "site_config",
+          filter: "config_key=eq.main",
+        },
+        (payload) => {
+          console.log("Real-time update received:", payload);
+          if (payload.new) {
+            setState(prev => ({
+              ...prev,
+              config: dbToConfig(payload.new),
+            }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Admin access is now permanent - no birthday date restriction
+  const canAccessAdmin = useCallback((): boolean => {
+    return true;
+  }, []);
+
+  const setAdminMode = useCallback((value: boolean) => {
+    setState(prev => ({ ...prev, isAdminMode: value, isPreviewMode: false }));
+  }, []);
+
+  const setPreviewMode = useCallback((value: boolean) => {
+    // Preview mode is disabled after birthday
     const birthdayDate = new Date(state.config.birthdayDate);
     const now = new Date();
-    return now < birthdayDate;
-  };
-
-  const setAdminMode = (value: boolean) => {
-    if (value && !canAccessAdmin()) return;
-    setState(prev => ({ ...prev, isAdminMode: value, isPreviewMode: false }));
-  };
-
-  const setPreviewMode = (value: boolean) => {
+    if (value && now >= birthdayDate) return;
+    
     setState(prev => ({ ...prev, isPreviewMode: value, isAdminMode: false }));
-  };
+  }, [state.config.birthdayDate]);
 
-  const updateConfig = (updates: Partial<SiteConfig>) => {
+  const updateConfig = useCallback(async (updates: Partial<SiteConfig>) => {
+    // Optimistically update local state
     setState(prev => ({
       ...prev,
       config: { ...prev.config, ...updates },
+      isSyncing: true,
     }));
-  };
 
-  const resetConfig = () => {
+    // Sync to database
+    try {
+      const dbUpdates = configToDb(updates);
+      const { error } = await supabase
+        .from("site_config")
+        .update(dbUpdates)
+        .eq("config_key", "main");
+
+      if (error) {
+        console.error("Error updating config:", error);
+      }
+    } catch (err) {
+      console.error("Failed to sync config:", err);
+    } finally {
+      setState(prev => ({ ...prev, isSyncing: false }));
+    }
+  }, []);
+
+  const resetConfig = useCallback(async () => {
     setState(prev => ({
       ...prev,
       config: defaultConfig,
+      isSyncing: true,
     }));
-    localStorage.removeItem(CONFIG_STORAGE_KEY);
-  };
 
-  const clearWishVault = () => {
+    try {
+      const dbData = configToDb(defaultConfig);
+      const { error } = await supabase
+        .from("site_config")
+        .update(dbData)
+        .eq("config_key", "main");
+
+      if (error) {
+        console.error("Error resetting config:", error);
+      }
+    } catch (err) {
+      console.error("Failed to reset config:", err);
+    } finally {
+      setState(prev => ({ ...prev, isSyncing: false }));
+    }
+  }, []);
+
+  const clearWishVault = useCallback(() => {
     localStorage.removeItem("dristi_birthday_wish_2025");
-  };
+  }, []);
 
   return (
     <AdminContext.Provider
