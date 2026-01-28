@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Types
+// Types - Birthday Experience Configuration
 export type MediaType = "none" | "image" | "video";
 
 export interface MemoryItem {
