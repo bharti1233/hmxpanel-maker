@@ -12,6 +12,7 @@ import VoiceMessage from "@/components/birthday/VoiceMessage";
 import WishVault from "@/components/birthday/WishVault";
 import BirthdayLetter from "@/components/birthday/BirthdayLetter";
 import FinalReveal from "@/components/birthday/FinalReveal";
+import BackgroundMusic from "@/components/birthday/BackgroundMusic";
 import HMXPanelBadge from "@/components/admin/HMXPanelBadge";
 import AdminPanel from "@/components/admin/AdminPanel";
 import { ChevronRight, ChevronLeft, Lock } from "lucide-react";
@@ -431,6 +432,11 @@ const Index = () => {
   return (
     <div className="relative min-h-screen overflow-hidden">
       <ParticleBackground />
+      
+      {/* Background music player */}
+      {config.backgroundMusicUrl && isBirthdayUnlocked && (
+        <BackgroundMusic audioUrl={config.backgroundMusicUrl} />
+      )}
       
       {/* Progress indicator - only show after countdown is unlocked */}
       {isBirthdayUnlocked && (
