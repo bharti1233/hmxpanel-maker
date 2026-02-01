@@ -12,6 +12,7 @@ import VoiceMessage from "@/components/birthday/VoiceMessage";
 import WishVault from "@/components/birthday/WishVault";
 import BirthdayLetter from "@/components/birthday/BirthdayLetter";
 import FinalReveal from "@/components/birthday/FinalReveal";
+import BackgroundMusic from "@/components/birthday/BackgroundMusic";
 import HMXPanelBadge from "@/components/admin/HMXPanelBadge";
 import AdminPanel from "@/components/admin/AdminPanel";
 import { ChevronRight, ChevronLeft, Lock } from "lucide-react";
@@ -448,6 +449,11 @@ const Index = () => {
 
       {/* Hidden admin badge - only show when not in preview */}
       {!isPreviewMode && <HMXPanelBadge />}
+
+      {/* Background Music Toggle - show after birthday is unlocked */}
+      {isBirthdayUnlocked && config.backgroundMusicUrl && (
+        <BackgroundMusic audioUrl={config.backgroundMusicUrl} />
+      )}
     </div>
   );
 };
