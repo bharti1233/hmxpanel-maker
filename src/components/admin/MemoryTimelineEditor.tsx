@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { MemoryItem, MediaType } from "@/contexts/AdminContext";
 import { Input } from "@/components/ui/input";
@@ -21,8 +21,6 @@ import {
 interface MemoryTimelineEditorProps {
   memories: MemoryItem[];
   onChange: (memories: MemoryItem[]) => void;
-  isInputFocused?: boolean;
-  onInputFocusChange?: (focused: boolean) => void;
 }
 
 const MediaTypeButton = ({
@@ -72,8 +70,6 @@ const MemoryCard = ({
   onMoveDown,
   isFirst,
   isLast,
-  onInputFocus,
-  onInputBlur,
 }: {
   memory: MemoryItem;
   index: number;
@@ -83,8 +79,6 @@ const MemoryCard = ({
   onMoveDown: () => void;
   isFirst: boolean;
   isLast: boolean;
-  onInputFocus: () => void;
-  onInputBlur: () => void;
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showMediaPreview, setShowMediaPreview] = useState(true);
@@ -96,11 +90,17 @@ const MemoryCard = ({
       className="touch-manipulation"
     >
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95 }}
+        layout
+        initial={{ opacity: 0, y: 20, rotateX: -5 }}
+        animate={{ opacity: 1, y: 0, rotateX: 0 }}
+        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+        whileHover={{ y: -2 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         className="relative mb-4"
+        style={{
+          transformStyle: "preserve-3d",
+          perspective: "1000px",
+        }}
       >
         {/* 3D Card Container */}
         <div
@@ -126,10 +126,6 @@ const MemoryCard = ({
             <Input
               value={memory.emoji}
               onChange={(e) => onUpdate("emoji", e.target.value)}
-              onFocus={onInputFocus}
-              onBlur={onInputBlur}
-              autoComplete="off"
-              data-form-type="other"
               className="w-14 text-center text-xl bg-transparent border-none focus-visible:ring-1 focus-visible:ring-birthday-pink/50"
               placeholder="✨"
             />
@@ -137,10 +133,6 @@ const MemoryCard = ({
             <Input
               value={memory.title}
               onChange={(e) => onUpdate("title", e.target.value)}
-              onFocus={onInputFocus}
-              onBlur={onInputBlur}
-              autoComplete="off"
-              data-form-type="other"
               className="flex-1 font-medium bg-transparent border-none focus-visible:ring-1 focus-visible:ring-birthday-pink/50"
               placeholder="Memory title..."
             />
@@ -206,10 +198,6 @@ const MemoryCard = ({
                     <Textarea
                       value={memory.description}
                       onChange={(e) => onUpdate("description", e.target.value)}
-                      onFocus={onInputFocus}
-                      onBlur={onInputBlur}
-                      autoComplete="off"
-                      data-form-type="other"
                       className="min-h-[80px] bg-muted/30 border-border/50 focus-visible:ring-1 focus-visible:ring-birthday-pink/50 resize-none"
                       placeholder="Share the memory..."
                     />
@@ -281,10 +269,6 @@ const MemoryCard = ({
                         <Input
                           value={memory.mediaUrl}
                           onChange={(e) => onUpdate("mediaUrl", e.target.value)}
-                          onFocus={onInputFocus}
-                          onBlur={onInputBlur}
-                          autoComplete="off"
-                          data-form-type="other"
                           className="bg-muted/30 border-border/50 focus-visible:ring-1 focus-visible:ring-birthday-pink/50"
                           placeholder={
                             memory.mediaType === "image"
@@ -355,24 +339,6 @@ const MemoryTimelineEditor = ({
   memories,
   onChange,
 }: MemoryTimelineEditorProps) => {
-  const [isInputFocused, setIsInputFocused] = useState(false);
-  const focusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleInputFocus = useCallback(() => {
-    if (focusTimeoutRef.current) {
-      clearTimeout(focusTimeoutRef.current);
-      focusTimeoutRef.current = null;
-    }
-    setIsInputFocused(true);
-  }, []);
-
-  const handleInputBlur = useCallback(() => {
-    // Small delay to prevent flicker when moving between inputs
-    focusTimeoutRef.current = setTimeout(() => {
-      setIsInputFocused(false);
-    }, 100);
-  }, []);
-
   const handleUpdate = (
     index: number,
     field: keyof MemoryItem,
@@ -400,8 +366,6 @@ const MemoryTimelineEditor = ({
   };
 
   const handleReorder = (newOrder: MemoryItem[]) => {
-    // Don't reorder while typing
-    if (isInputFocused) return;
     onChange(newOrder);
   };
 
@@ -452,8 +416,6 @@ const MemoryTimelineEditor = ({
               onMoveDown={() => moveItem(index, "down")}
               isFirst={index === 0}
               isLast={index === memories.length - 1}
-              onInputFocus={handleInputFocus}
-              onInputBlur={handleInputBlur}
             />
           ))}
         </AnimatePresence>
