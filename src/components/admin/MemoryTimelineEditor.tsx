@@ -280,12 +280,13 @@ const MemoryCard = ({
                                 : "https://example.com/video.mp4"
                             }
                           />
+                          {/* Show crop button for images */}
                           {memory.mediaType === "image" && memory.mediaUrl && (
                             <Button
                               variant="outline"
                               size="icon"
                               onClick={() => setShowCropper(true)}
-                              className="shrink-0 h-10 w-10 hover:border-birthday-pink hover:text-birthday-pink transition-colors touch-manipulation"
+                              className="shrink-0 h-10 w-10 hover:border-birthday-pink hover:text-birthday-pink transition-colors touch-manipulation active:scale-95"
                               title="Crop image"
                             >
                               <Crop className="w-4 h-4" />
@@ -298,18 +299,32 @@ const MemoryCard = ({
                           <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="relative rounded-xl overflow-hidden bg-muted/30 aspect-video"
+                            className="relative rounded-xl overflow-hidden bg-muted/30 aspect-video group"
                           >
                             {memory.mediaType === "image" ? (
-                              <img
-                                src={memory.mediaUrl}
-                                alt="Preview"
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = "none";
-                                }}
-                              />
+                              <>
+                                <img
+                                  src={memory.mediaUrl}
+                                  alt="Preview"
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = "none";
+                                  }}
+                                />
+                                {/* Overlay crop button on image preview */}
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => setShowCropper(true)}
+                                    className="gap-2 touch-manipulation active:scale-95"
+                                  >
+                                    <Crop className="w-4 h-4" />
+                                    Crop
+                                  </Button>
+                                </div>
+                              </>
                             ) : (
                               <video
                                 src={memory.mediaUrl}
@@ -330,7 +345,6 @@ const MemoryCard = ({
                               onUpdate("mediaUrl", croppedUrl);
                               setShowCropper(false);
                             }}
-                            aspectRatio={16 / 9}
                           />
                         )}
                       </motion.div>

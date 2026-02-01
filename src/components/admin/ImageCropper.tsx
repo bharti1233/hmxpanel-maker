@@ -1,10 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Cropper, { Area, Point } from "react-easy-crop";
-import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Check, X, ZoomIn, RotateCw } from "lucide-react";
+import { Check, X, ZoomIn, RotateCw, Square, RectangleHorizontal, Loader2 } from "lucide-react";
 
 interface ImageCropperProps {
   imageUrl: string;
@@ -14,18 +13,32 @@ interface ImageCropperProps {
   aspectRatio?: number;
 }
 
+type AspectOption = {
+  label: string;
+  value: number;
+  icon: React.ReactNode;
+};
+
+const ASPECT_OPTIONS: AspectOption[] = [
+  { label: "16:9", value: 16 / 9, icon: <RectangleHorizontal className="w-4 h-4" /> },
+  { label: "4:3", value: 4 / 3, icon: <RectangleHorizontal className="w-4 h-4" /> },
+  { label: "1:1", value: 1, icon: <Square className="w-4 h-4" /> },
+];
+
 const createImage = (url: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
     const image = new Image();
     image.addEventListener("load", () => resolve(image));
     image.addEventListener("error", (error) => reject(error));
+    // Try without crossOrigin first for same-origin images
     image.crossOrigin = "anonymous";
     image.src = url;
   });
 
 const getCroppedImg = async (
   imageSrc: string,
-  pixelCrop: Area
+  pixelCrop: Area,
+  rotation: number = 0
 ): Promise<string> => {
   const image = await createImage(imageSrc);
   const canvas = document.createElement("canvas");
@@ -35,11 +48,37 @@ const getCroppedImg = async (
     throw new Error("No 2d context");
   }
 
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
+  // Calculate bounding box of rotated image
+  const rotRad = (rotation * Math.PI) / 180;
+  const sin = Math.abs(Math.sin(rotRad));
+  const cos = Math.abs(Math.cos(rotRad));
+  
+  const bBoxWidth = image.width * cos + image.height * sin;
+  const bBoxHeight = image.width * sin + image.height * cos;
 
-  ctx.drawImage(
-    image,
+  // Set canvas size to bounding box
+  canvas.width = bBoxWidth;
+  canvas.height = bBoxHeight;
+
+  // Translate and rotate
+  ctx.translate(bBoxWidth / 2, bBoxHeight / 2);
+  ctx.rotate(rotRad);
+  ctx.translate(-image.width / 2, -image.height / 2);
+  ctx.drawImage(image, 0, 0);
+
+  // Create a new canvas for the cropped area
+  const croppedCanvas = document.createElement("canvas");
+  const croppedCtx = croppedCanvas.getContext("2d");
+
+  if (!croppedCtx) {
+    throw new Error("No 2d context for cropped canvas");
+  }
+
+  croppedCanvas.width = pixelCrop.width;
+  croppedCanvas.height = pixelCrop.height;
+
+  croppedCtx.drawImage(
+    canvas,
     pixelCrop.x,
     pixelCrop.y,
     pixelCrop.width,
@@ -50,7 +89,7 @@ const getCroppedImg = async (
     pixelCrop.height
   );
 
-  return canvas.toDataURL("image/jpeg", 0.9);
+  return croppedCanvas.toDataURL("image/jpeg", 0.85);
 };
 
 const ImageCropper = ({
@@ -58,20 +97,35 @@ const ImageCropper = ({
   open,
   onClose,
   onCropComplete,
-  aspectRatio = 16 / 9,
+  aspectRatio: initialAspect = 16 / 9,
 }: ImageCropperProps) => {
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
+  const [aspectRatio, setAspectRatio] = useState(initialAspect);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Reset state when dialog opens
+  useEffect(() => {
+    if (open) {
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setRotation(0);
+      setAspectRatio(initialAspect);
+      setImageError(false);
+      setIsLoading(true);
+    }
+  }, [open, initialAspect]);
 
   const onCropChange = useCallback((location: Point) => {
     setCrop(location);
   }, []);
 
-  const onZoomChange = useCallback((zoom: number) => {
-    setZoom(zoom);
+  const onZoomChange = useCallback((newZoom: number) => {
+    setZoom(newZoom);
   }, []);
 
   const onCropCompleteCallback = useCallback(
@@ -81,16 +135,22 @@ const ImageCropper = ({
     []
   );
 
+  const handleMediaLoaded = useCallback(() => {
+    setIsLoading(false);
+    setImageError(false);
+  }, []);
+
   const handleSave = async () => {
     if (!croppedAreaPixels) return;
 
     setIsProcessing(true);
     try {
-      const croppedImage = await getCroppedImg(imageUrl, croppedAreaPixels);
+      const croppedImage = await getCroppedImg(imageUrl, croppedAreaPixels, rotation);
       onCropComplete(croppedImage);
       onClose();
     } catch (error) {
       console.error("Error cropping image:", error);
+      setImageError(true);
     } finally {
       setIsProcessing(false);
     }
@@ -104,31 +164,70 @@ const ImageCropper = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg w-full p-0 overflow-hidden">
-        <DialogHeader className="p-4 pb-0">
+      <DialogContent className="max-w-lg w-full p-0 overflow-hidden max-h-[90vh]">
+        <DialogHeader className="p-4 pb-2">
           <DialogTitle className="flex items-center gap-2">
             <span className="text-lg">✂️ Crop Image</span>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="relative w-full h-64 sm:h-80 bg-muted/50">
-          <Cropper
-            image={imageUrl}
-            crop={crop}
-            zoom={zoom}
-            rotation={rotation}
-            aspect={aspectRatio}
-            onCropChange={onCropChange}
-            onZoomChange={onZoomChange}
-            onCropComplete={onCropCompleteCallback}
-            classes={{
-              containerClassName: "rounded-none",
-              cropAreaClassName: "!border-birthday-pink !border-2",
-            }}
-          />
+        <div className="relative w-full h-56 sm:h-72 bg-muted/50">
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted/50 z-10">
+              <Loader2 className="w-8 h-8 animate-spin text-birthday-pink" />
+            </div>
+          )}
+          {imageError ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/50 text-center p-4">
+              <p className="text-destructive font-medium mb-2">Unable to load image</p>
+              <p className="text-sm text-muted-foreground">
+                The image may be from a different domain. Try using a direct image URL.
+              </p>
+            </div>
+          ) : (
+            <Cropper
+              image={imageUrl}
+              crop={crop}
+              zoom={zoom}
+              rotation={rotation}
+              aspect={aspectRatio}
+              onCropChange={onCropChange}
+              onZoomChange={onZoomChange}
+              onCropComplete={onCropCompleteCallback}
+              onMediaLoaded={handleMediaLoaded}
+              classes={{
+                containerClassName: "rounded-none touch-manipulation",
+                cropAreaClassName: "!border-birthday-pink !border-2",
+              }}
+            />
+          )}
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-3 overflow-y-auto">
+          {/* Aspect Ratio Selection */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Aspect Ratio</label>
+            <div className="flex gap-2">
+              {ASPECT_OPTIONS.map((option) => (
+                <Button
+                  key={option.label}
+                  type="button"
+                  variant={aspectRatio === option.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setAspectRatio(option.value)}
+                  className={`flex-1 gap-1 touch-manipulation ${
+                    aspectRatio === option.value
+                      ? "bg-birthday-pink hover:bg-birthday-pink/90"
+                      : ""
+                  }`}
+                >
+                  {option.icon}
+                  {option.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
           {/* Zoom Control */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -143,7 +242,7 @@ const ImageCropper = ({
               onValueChange={([value]) => setZoom(value)}
               min={1}
               max={3}
-              step={0.1}
+              step={0.05}
               className="touch-manipulation"
             />
           </div>
@@ -160,8 +259,8 @@ const ImageCropper = ({
             <Slider
               value={[rotation]}
               onValueChange={([value]) => setRotation(value)}
-              min={0}
-              max={360}
+              min={-180}
+              max={180}
               step={1}
               className="touch-manipulation"
             />
@@ -172,14 +271,16 @@ const ImageCropper = ({
             <Button
               variant="outline"
               onClick={handleReset}
-              className="flex-1 gap-2"
+              size="sm"
+              className="gap-1 touch-manipulation"
             >
               Reset
             </Button>
             <Button
               variant="ghost"
               onClick={onClose}
-              className="gap-2"
+              size="sm"
+              className="gap-1 touch-manipulation"
             >
               <X className="w-4 h-4" />
               Cancel
@@ -187,11 +288,21 @@ const ImageCropper = ({
             <Button
               variant="birthday"
               onClick={handleSave}
-              disabled={isProcessing}
-              className="flex-1 gap-2"
+              disabled={isProcessing || imageError}
+              size="sm"
+              className="flex-1 gap-1 touch-manipulation"
             >
-              <Check className="w-4 h-4" />
-              {isProcessing ? "Processing..." : "Apply"}
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4" />
+                  Apply Crop
+                </>
+              )}
             </Button>
           </div>
         </div>
