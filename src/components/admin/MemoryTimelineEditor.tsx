@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import ImageCropper from "./ImageCropper";
 import {
   Trash2,
   Plus,
@@ -16,6 +17,7 @@ import {
   ChevronUp,
   Eye,
   EyeOff,
+  Crop,
 } from "lucide-react";
 
 interface MemoryTimelineEditorProps {
@@ -82,6 +84,7 @@ const MemoryCard = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showMediaPreview, setShowMediaPreview] = useState(true);
+  const [showCropper, setShowCropper] = useState(false);
 
   return (
     <Reorder.Item
@@ -266,16 +269,29 @@ const MemoryCard = ({
                           </Button>
                         </div>
 
-                        <Input
-                          value={memory.mediaUrl}
-                          onChange={(e) => onUpdate("mediaUrl", e.target.value)}
-                          className="bg-muted/30 border-border/50 focus-visible:ring-1 focus-visible:ring-birthday-pink/50"
-                          placeholder={
-                            memory.mediaType === "image"
-                              ? "https://example.com/image.jpg"
-                              : "https://example.com/video.mp4"
-                          }
-                        />
+                        <div className="flex gap-2">
+                          <Input
+                            value={memory.mediaUrl}
+                            onChange={(e) => onUpdate("mediaUrl", e.target.value)}
+                            className="flex-1 bg-muted/30 border-border/50 focus-visible:ring-1 focus-visible:ring-birthday-pink/50"
+                            placeholder={
+                              memory.mediaType === "image"
+                                ? "https://example.com/image.jpg"
+                                : "https://example.com/video.mp4"
+                            }
+                          />
+                          {memory.mediaType === "image" && memory.mediaUrl && (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => setShowCropper(true)}
+                              className="shrink-0 h-10 w-10 hover:border-birthday-pink hover:text-birthday-pink transition-colors touch-manipulation"
+                              title="Crop image"
+                            >
+                              <Crop className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
 
                         {/* Media Preview */}
                         {showMediaPreview && memory.mediaUrl && (
@@ -302,6 +318,20 @@ const MemoryCard = ({
                               />
                             )}
                           </motion.div>
+                        )}
+
+                        {/* Image Cropper Modal */}
+                        {memory.mediaType === "image" && memory.mediaUrl && (
+                          <ImageCropper
+                            imageUrl={memory.mediaUrl}
+                            open={showCropper}
+                            onClose={() => setShowCropper(false)}
+                            onCropComplete={(croppedUrl) => {
+                              onUpdate("mediaUrl", croppedUrl);
+                              setShowCropper(false);
+                            }}
+                            aspectRatio={16 / 9}
+                          />
                         )}
                       </motion.div>
                     )}
