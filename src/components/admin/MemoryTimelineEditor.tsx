@@ -128,6 +128,8 @@ const MemoryCard = ({
               onChange={(e) => onUpdate("emoji", e.target.value)}
               onFocus={onInputFocus}
               onBlur={onInputBlur}
+              autoComplete="off"
+              data-form-type="other"
               className="w-14 text-center text-xl bg-transparent border-none focus-visible:ring-1 focus-visible:ring-birthday-pink/50"
               placeholder="✨"
             />
@@ -137,6 +139,8 @@ const MemoryCard = ({
               onChange={(e) => onUpdate("title", e.target.value)}
               onFocus={onInputFocus}
               onBlur={onInputBlur}
+              autoComplete="off"
+              data-form-type="other"
               className="flex-1 font-medium bg-transparent border-none focus-visible:ring-1 focus-visible:ring-birthday-pink/50"
               placeholder="Memory title..."
             />
@@ -204,6 +208,8 @@ const MemoryCard = ({
                       onChange={(e) => onUpdate("description", e.target.value)}
                       onFocus={onInputFocus}
                       onBlur={onInputBlur}
+                      autoComplete="off"
+                      data-form-type="other"
                       className="min-h-[80px] bg-muted/30 border-border/50 focus-visible:ring-1 focus-visible:ring-birthday-pink/50 resize-none"
                       placeholder="Share the memory..."
                     />
@@ -277,6 +283,8 @@ const MemoryCard = ({
                           onChange={(e) => onUpdate("mediaUrl", e.target.value)}
                           onFocus={onInputFocus}
                           onBlur={onInputBlur}
+                          autoComplete="off"
+                          data-form-type="other"
                           className="bg-muted/30 border-border/50 focus-visible:ring-1 focus-visible:ring-birthday-pink/50"
                           placeholder={
                             memory.mediaType === "image"
