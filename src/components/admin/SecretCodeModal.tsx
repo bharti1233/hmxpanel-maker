@@ -61,6 +61,8 @@ const SecretCodeModal = ({ isOpen, onClose }: SecretCodeModalProps) => {
                 setError("");
               }}
               placeholder="Enter code..."
+              autoComplete="off"
+              data-form-type="other"
               className="text-center text-lg tracking-widest bg-muted/50 border-muted-foreground/20 focus:border-birthday-pink"
               autoFocus
             />
