@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Cropper, { Area, Point } from "react-easy-crop";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -25,22 +25,66 @@ const ASPECT_OPTIONS: AspectOption[] = [
   { label: "1:1", value: 1, icon: <Square className="w-4 h-4" /> },
 ];
 
-const createImage = (url: string): Promise<HTMLImageElement> =>
-  new Promise((resolve, reject) => {
-    const image = new Image();
-    image.addEventListener("load", () => resolve(image));
-    image.addEventListener("error", (error) => reject(error));
-    // Try without crossOrigin first for same-origin images
-    image.crossOrigin = "anonymous";
-    image.src = url;
-  });
+// Convert image URL to base64 data URL to avoid CORS issues
+const urlToDataUrl = async (url: string): Promise<string> => {
+  // If already a data URL, return as-is
+  if (url.startsWith("data:")) {
+    return url;
+  }
+
+  try {
+    // Fetch the image as a blob
+    const response = await fetch(url, { mode: "cors" });
+    if (!response.ok) throw new Error("Failed to fetch image");
+    
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    // If CORS fails, try loading via img element (works for same-origin)
+    console.warn("CORS fetch failed, trying canvas approach:", error);
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("No canvas context"));
+          return;
+        }
+        ctx.drawImage(img, 0, 0);
+        try {
+          resolve(canvas.toDataURL("image/jpeg", 0.9));
+        } catch (e) {
+          reject(e);
+        }
+      };
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = url;
+    });
+  }
+};
 
 const getCroppedImg = async (
   imageSrc: string,
   pixelCrop: Area,
   rotation: number = 0
 ): Promise<string> => {
-  const image = await createImage(imageSrc);
+  // Create image from data URL (no CORS issues)
+  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = imageSrc;
+  });
+
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
@@ -106,19 +150,39 @@ const ImageCropper = ({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [localImageUrl, setLocalImageUrl] = useState<string>("");
 
-  // Reset state when dialog opens
+  // Load and convert image to data URL when dialog opens
   useEffect(() => {
-    if (open) {
+    if (open && imageUrl) {
       setCrop({ x: 0, y: 0 });
       setZoom(1);
       setRotation(0);
       setAspectRatio(initialAspect);
       setImageError(false);
+      setErrorMessage("");
       setIsLoading(true);
+      setLocalImageUrl("");
+
+      // Convert to data URL to avoid CORS issues
+      urlToDataUrl(imageUrl)
+        .then((dataUrl) => {
+          setLocalImageUrl(dataUrl);
+          setIsLoading(false);
+        })
+        .catch((err) => {
+          console.error("Failed to load image:", err);
+          setImageError(true);
+          setErrorMessage(
+            "Unable to load this image for cropping. This might be due to CORS restrictions. " +
+            "Try using a direct image URL or an image hosting service that allows cross-origin access."
+          );
+          setIsLoading(false);
+        });
     }
-  }, [open, initialAspect]);
+  }, [open, imageUrl, initialAspect]);
 
   const onCropChange = useCallback((location: Point) => {
     setCrop(location);
@@ -141,16 +205,18 @@ const ImageCropper = ({
   }, []);
 
   const handleSave = async () => {
-    if (!croppedAreaPixels) return;
+    if (!croppedAreaPixels || !localImageUrl) return;
 
     setIsProcessing(true);
     try {
-      const croppedImage = await getCroppedImg(imageUrl, croppedAreaPixels, rotation);
+      // Use localImageUrl (data URL) for cropping - no CORS issues
+      const croppedImage = await getCroppedImg(localImageUrl, croppedAreaPixels, rotation);
       onCropComplete(croppedImage);
       onClose();
     } catch (error) {
       console.error("Error cropping image:", error);
       setImageError(true);
+      setErrorMessage("Failed to crop image. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -180,13 +246,13 @@ const ImageCropper = ({
           {imageError ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/50 text-center p-4">
               <p className="text-destructive font-medium mb-2">Unable to load image</p>
-              <p className="text-sm text-muted-foreground">
-                The image may be from a different domain. Try using a direct image URL.
+              <p className="text-sm text-muted-foreground max-w-xs">
+                {errorMessage || "The image may be from a different domain. Try using a direct image URL."}
               </p>
             </div>
-          ) : (
+          ) : localImageUrl ? (
             <Cropper
-              image={imageUrl}
+              image={localImageUrl}
               crop={crop}
               zoom={zoom}
               rotation={rotation}
@@ -200,7 +266,7 @@ const ImageCropper = ({
                 cropAreaClassName: "!border-birthday-pink !border-2",
               }}
             />
-          )}
+          ) : null}
         </div>
 
         <div className="p-4 space-y-3 overflow-y-auto">
