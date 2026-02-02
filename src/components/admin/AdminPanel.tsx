@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import MemoryTimelineEditor from "./MemoryTimelineEditor";
+import QuizEditor from "./QuizEditor";
 import {
   X, Save, Eye, RotateCcw, User, Calendar, Image, MessageSquare,
-  Layout, Cake, Heart, Trash2, Plus, GripVertical, Music, Link, Cloud, CloudOff
+  Layout, Cake, Heart, Trash2, Plus, GripVertical, Music, Link, Cloud, CloudOff, HelpCircle
 } from "lucide-react";
 
 const AdminPanel = () => {
@@ -65,10 +66,8 @@ const AdminPanel = () => {
     handleChange("letterParagraphs", config.letterParagraphs.filter(p => p.id !== id));
   };
 
-  const handleQuizChange = (index: number, field: keyof QuizQuestion, value: any) => {
-    const newQuestions = [...config.quizQuestions];
-    newQuestions[index] = { ...newQuestions[index], [field]: value };
-    handleChange("quizQuestions", newQuestions);
+  const handleQuizQuestionsChange = (questions: QuizQuestion[]) => {
+    handleChange("quizQuestions", questions);
   };
 
   const handlePreview = () => {
@@ -455,43 +454,12 @@ const AdminPanel = () => {
 
             {/* Advanced */}
             <TabsContent value="advanced" className="space-y-6">
-              <div className="glass-card rounded-2xl p-6 space-y-4">
-                <h3 className="font-display font-semibold">Quiz Questions</h3>
-                <div className="space-y-4">
-                  {(config.quizQuestions || []).map((q, qIndex) => (
-                    <div key={qIndex} className="p-4 bg-muted/50 rounded-xl space-y-3">
-                      <div>
-                        <Label>Question {qIndex + 1}</Label>
-                        <Input
-                          value={q.question}
-                          onChange={(e) => handleQuizChange(qIndex, "question", e.target.value)}
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {q.options.map((opt, oIndex) => (
-                          <div key={oIndex} className="flex items-center gap-2">
-                            <input
-                              type="radio"
-                              name={`correct-${qIndex}`}
-                              checked={q.correct === oIndex}
-                              onChange={() => handleQuizChange(qIndex, "correct", oIndex)}
-                              className="accent-birthday-pink"
-                            />
-                            <Input
-                              value={opt}
-                              onChange={(e) => {
-                                const newOptions = [...q.options];
-                                newOptions[oIndex] = e.target.value;
-                                handleQuizChange(qIndex, "options", newOptions);
-                              }}
-                              className="flex-1"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              {/* Quiz Editor */}
+              <div className="glass-card rounded-2xl p-6">
+                <QuizEditor
+                  questions={config.quizQuestions || []}
+                  onChange={handleQuizQuestionsChange}
+                />
               </div>
 
               <div className="glass-card rounded-2xl p-6 space-y-4">
