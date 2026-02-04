@@ -1,9 +1,10 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Cropper, { Area, Point } from "react-easy-crop";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Check, X, ZoomIn, RotateCw, Square, RectangleHorizontal, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ImageCropperProps {
   imageUrl: string;
@@ -70,6 +71,44 @@ const urlToDataUrl = async (url: string): Promise<string> => {
       img.src = url;
     });
   }
+};
+
+// Convert base64 to Blob for upload
+const dataURLtoBlob = (dataURL: string): Blob => {
+  const arr = dataURL.split(',');
+  const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
+};
+
+// Upload image to Supabase storage and return public URL
+const uploadToStorage = async (dataUrl: string): Promise<string> => {
+  const blob = dataURLtoBlob(dataUrl);
+  const fileName = `cropped/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+  
+  const { data, error } = await supabase.storage
+    .from('images')
+    .upload(fileName, blob, {
+      contentType: 'image/jpeg',
+      cacheControl: '3600',
+      upsert: false,
+    });
+  
+  if (error) {
+    throw new Error(`Upload failed: ${error.message}`);
+  }
+  
+  // Get public URL
+  const { data: urlData } = supabase.storage
+    .from('images')
+    .getPublicUrl(data.path);
+  
+  return urlData.publicUrl;
 };
 
 const getCroppedImg = async (
@@ -209,14 +248,18 @@ const ImageCropper = ({
 
     setIsProcessing(true);
     try {
-      // Use localImageUrl (data URL) for cropping - no CORS issues
-      const croppedImage = await getCroppedImg(localImageUrl, croppedAreaPixels, rotation);
-      onCropComplete(croppedImage);
+      // Get cropped image as data URL
+      const croppedDataUrl = await getCroppedImg(localImageUrl, croppedAreaPixels, rotation);
+      
+      // Upload to storage and get public URL
+      const publicUrl = await uploadToStorage(croppedDataUrl);
+      
+      onCropComplete(publicUrl);
       onClose();
     } catch (error) {
       console.error("Error cropping image:", error);
       setImageError(true);
-      setErrorMessage("Failed to crop image. Please try again.");
+      setErrorMessage(error instanceof Error ? error.message : "Failed to crop image. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -354,14 +397,14 @@ const ImageCropper = ({
             <Button
               variant="birthday"
               onClick={handleSave}
-              disabled={isProcessing || imageError}
+              disabled={isProcessing || imageError || !localImageUrl}
               size="sm"
               className="flex-1 gap-1 touch-manipulation"
             >
               {isProcessing ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
+                  Uploading...
                 </>
               ) : (
                 <>

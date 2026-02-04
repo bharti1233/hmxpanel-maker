@@ -19,6 +19,7 @@ export interface LetterParagraph {
 }
 
 export interface QuizQuestion {
+  id?: string;
   question: string;
   options: string[];
   correct: number;
@@ -59,6 +60,7 @@ export interface SiteConfig {
   showVoiceMessage: boolean;
   showWishVault: boolean;
   showFinalReveal: boolean;
+  showQuiz: boolean;
 }
 
 export interface AdminState {
@@ -112,6 +114,7 @@ const defaultConfig: SiteConfig = {
   showVoiceMessage: true,
   showWishVault: true,
   showFinalReveal: true,
+  showQuiz: true,
 };
 
 // Helper to convert database row to SiteConfig
@@ -139,6 +142,7 @@ const dbToConfig = (row: any): SiteConfig => ({
   showVoiceMessage: row.show_voice_message ?? true,
   showWishVault: row.show_wish_vault ?? true,
   showFinalReveal: row.show_final_reveal ?? true,
+  showQuiz: row.show_quiz ?? true,
 });
 
 // Helper to convert SiteConfig to database format
@@ -167,6 +171,7 @@ const configToDb = (config: Partial<SiteConfig>): Record<string, any> => {
     showVoiceMessage: "show_voice_message",
     showWishVault: "show_wish_vault",
     showFinalReveal: "show_final_reveal",
+    showQuiz: "show_quiz",
   };
 
   const dbData: Record<string, any> = {};
