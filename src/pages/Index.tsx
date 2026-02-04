@@ -32,10 +32,11 @@ const Index = () => {
   const pages = useMemo(() => {
     const basePages: PageId[] = ["countdown", "star"];
     if (config.showMemoryTimeline) basePages.push("memories");
-    basePages.push("quiz", "cake", "letter");
+    if (config.showQuiz && config.quizQuestions && config.quizQuestions.length > 0) basePages.push("quiz");
+    basePages.push("cake", "letter");
     if (config.showFinalReveal) basePages.push("final");
     return basePages;
-  }, [config.showMemoryTimeline, config.showFinalReveal]);
+  }, [config.showMemoryTimeline, config.showFinalReveal, config.showQuiz, config.quizQuestions]);
 
   // Build dynamic steps for progress indicator
   const STEPS = useMemo(() => {
@@ -44,12 +45,12 @@ const Index = () => {
       { label: "Star", icon: "⭐" },
     ];
     if (config.showMemoryTimeline) steps.push({ label: "Memories", icon: "💭" });
-    steps.push({ label: "Quiz", icon: "🎯" });
+    if (config.showQuiz && config.quizQuestions && config.quizQuestions.length > 0) steps.push({ label: "Quiz", icon: "🎯" });
     steps.push({ label: "Cake", icon: "🎂" });
     steps.push({ label: "Letter", icon: "💌" });
     if (config.showFinalReveal) steps.push({ label: "Final", icon: "🎁" });
     return steps;
-  }, [config.showMemoryTimeline, config.showFinalReveal]);
+  }, [config.showMemoryTimeline, config.showFinalReveal, config.showQuiz, config.quizQuestions]);
 
   useEffect(() => {
     const checkBirthday = () => {

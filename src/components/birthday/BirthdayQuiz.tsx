@@ -35,9 +35,14 @@ const defaultQuestions: Question[] = [
 
 const BirthdayQuiz = ({ 
   onComplete, 
-  questions = defaultQuestions,
+  questions: customQuestions,
   recipientName = "Dristi" 
 }: BirthdayQuizProps) => {
+  // Use custom questions if provided and not empty, otherwise use defaults
+  const questions = customQuestions && customQuestions.length > 0 
+    ? customQuestions 
+    : defaultQuestions;
+    
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);

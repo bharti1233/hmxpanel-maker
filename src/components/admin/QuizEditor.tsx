@@ -26,7 +26,7 @@ interface QuizQuestionWithId extends QuizQuestion {
 
 const ensureId = (q: QuizQuestion, index: number): QuizQuestionWithId => ({
   ...q,
-  id: (q as any).id || `q${index}-${Date.now()}`,
+  id: q.id || `q${index}-${Math.random().toString(36).substring(7)}`,
 });
 
 const QuestionCard = ({
@@ -286,6 +286,7 @@ const QuizEditor = ({ questions, onChange }: QuizEditorProps) => {
 
   const handleAdd = () => {
     const newQuestion: QuizQuestion = {
+      id: `q${Date.now()}-${Math.random().toString(36).substring(7)}`,
       question: "New Question?",
       options: ["Option A", "Option B", "Option C", "Option D"],
       correct: 0,
@@ -294,9 +295,8 @@ const QuizEditor = ({ questions, onChange }: QuizEditorProps) => {
   };
 
   const handleReorder = (newOrder: QuizQuestionWithId[]) => {
-    // Strip the id field when saving back
-    const cleanQuestions: QuizQuestion[] = newOrder.map(({ id, ...rest }) => rest);
-    onChange(cleanQuestions);
+    // Keep the id field when saving back (now part of the type)
+    onChange(newOrder);
   };
 
   const moveItem = (index: number, direction: "up" | "down") => {

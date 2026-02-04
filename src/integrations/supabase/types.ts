@@ -37,6 +37,7 @@ export type Database = {
           sender_name: string
           show_final_reveal: boolean
           show_memory_timeline: boolean
+          show_quiz: boolean
           show_voice_message: boolean
           show_wish_vault: boolean
           star_page_message: string
@@ -66,6 +67,7 @@ export type Database = {
           sender_name?: string
           show_final_reveal?: boolean
           show_memory_timeline?: boolean
+          show_quiz?: boolean
           show_voice_message?: boolean
           show_wish_vault?: boolean
           star_page_message?: string
@@ -95,6 +97,7 @@ export type Database = {
           sender_name?: string
           show_final_reveal?: boolean
           show_memory_timeline?: boolean
+          show_quiz?: boolean
           show_voice_message?: boolean
           show_wish_vault?: boolean
           star_page_message?: string

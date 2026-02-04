@@ -440,6 +440,17 @@ const AdminPanel = () => {
 
                   <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl">
                     <div>
+                      <p className="font-medium">Quiz</p>
+                      <p className="text-sm text-muted-foreground">Show birthday quiz</p>
+                    </div>
+                    <Switch
+                      checked={config.showQuiz}
+                      onCheckedChange={(checked) => handleChange("showQuiz", checked)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl">
+                    <div>
                       <p className="font-medium">Final Reveal</p>
                       <p className="text-sm text-muted-foreground">Show final surprise page</p>
                     </div>
