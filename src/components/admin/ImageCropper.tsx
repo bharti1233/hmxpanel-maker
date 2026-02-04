@@ -21,9 +21,9 @@ type AspectOption = {
 };
 
 const ASPECT_OPTIONS: AspectOption[] = [
-  { label: "16:9", value: 16 / 9, icon: <RectangleHorizontal className="w-4 h-4" /> },
-  { label: "4:3", value: 4 / 3, icon: <RectangleHorizontal className="w-4 h-4" /> },
   { label: "1:1", value: 1, icon: <Square className="w-4 h-4" /> },
+  { label: "4:3", value: 4 / 3, icon: <RectangleHorizontal className="w-4 h-4" /> },
+  { label: "16:9", value: 16 / 9, icon: <RectangleHorizontal className="w-4 h-4" /> },
 ];
 
 // Convert image URL to base64 data URL to avoid CORS issues
@@ -180,7 +180,7 @@ const ImageCropper = ({
   open,
   onClose,
   onCropComplete,
-  aspectRatio: initialAspect = 16 / 9,
+  aspectRatio: initialAspect = 1,
 }: ImageCropperProps) => {
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
