@@ -38,7 +38,7 @@ const MediaDisplay = ({ memory }: { memory: Memory }) => {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative mt-3 rounded-xl overflow-hidden aspect-video bg-muted/30"
+        className="relative mt-3 rounded-xl overflow-hidden aspect-square bg-muted/30"
       >
         <img
           src={memory.mediaUrl}
@@ -56,7 +56,7 @@ const MediaDisplay = ({ memory }: { memory: Memory }) => {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative mt-3 rounded-xl overflow-hidden aspect-video bg-muted/30"
+        className="relative mt-3 rounded-xl overflow-hidden aspect-square bg-muted/30"
       >
         {!isPlaying ? (
           <button
