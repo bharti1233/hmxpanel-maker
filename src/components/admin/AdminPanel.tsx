@@ -12,11 +12,11 @@ import MemoryTimelineEditor from "./MemoryTimelineEditor";
 import QuizEditor from "./QuizEditor";
 import {
   X, Save, Eye, RotateCcw, User, Calendar, Image, MessageSquare,
-  Layout, Cake, Heart, Trash2, Plus, GripVertical, Music, Link, Cloud, CloudOff, HelpCircle
+  Layout, Cake, Heart, Trash2, Plus, GripVertical, Music, Link, Cloud, CloudOff, HelpCircle, LogOut
 } from "lucide-react";
 
 const AdminPanel = () => {
-  const { state, setAdminMode, setPreviewMode, updateConfig, resetConfig, clearWishVault } = useAdmin();
+  const { state, setAdminMode, setPreviewMode, updateConfig, resetConfig, clearWishVault, signOut } = useAdmin();
   const { config, isSyncing } = state;
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -118,6 +118,18 @@ const AdminPanel = () => {
           <Button variant="outline" size="sm" onClick={handlePreview} className="gap-2">
             <Eye className="w-4 h-4" />
             Preview
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={async () => {
+              await signOut();
+              setAdminMode(false);
+            }} 
+            className="gap-2 text-destructive hover:text-destructive"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
           </Button>
           <Button variant="ghost" size="icon" onClick={handleClose}>
             <X className="w-5 h-5" />
