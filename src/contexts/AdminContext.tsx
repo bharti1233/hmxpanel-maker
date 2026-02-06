@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { User, Session } from "@supabase/supabase-js";
 
 // Types
 export type MediaType = "none" | "image" | "video";
@@ -69,6 +70,10 @@ export interface AdminState {
   config: SiteConfig;
   isLoading: boolean;
   isSyncing: boolean;
+  user: User | null;
+  session: Session | null;
+  isAdmin: boolean;
+  authLoading: boolean;
 }
 
 interface AdminContextType {
@@ -79,10 +84,10 @@ interface AdminContextType {
   resetConfig: () => void;
   clearWishVault: () => void;
   canAccessAdmin: () => boolean;
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: string | null }>;
+  signOut: () => Promise<void>;
 }
-
-const ADMIN_CODE = "4157";
-const PREVIEW_CODE = "preview";
 
 const defaultConfig: SiteConfig = {
   recipientName: "Birthday Star",
@@ -192,7 +197,88 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
     config: defaultConfig,
     isLoading: true,
     isSyncing: false,
+    user: null,
+    session: null,
+    isAdmin: false,
+    authLoading: true,
   });
+
+  // Check if user has admin role
+  const checkAdminRole = useCallback(async (userId: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error checking admin role:", error);
+        return false;
+      }
+
+      return !!data;
+    } catch (err) {
+      console.error("Failed to check admin role:", err);
+      return false;
+    }
+  }, []);
+
+  // Set up auth state listener
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const user = session?.user ?? null;
+        
+        if (user) {
+          // Use setTimeout to prevent potential race conditions
+          setTimeout(async () => {
+            const isAdmin = await checkAdminRole(user.id);
+            setState(prev => ({
+              ...prev,
+              user,
+              session,
+              isAdmin,
+              isAdminMode: isAdmin && prev.isAdminMode,
+              authLoading: false,
+            }));
+          }, 0);
+        } else {
+          setState(prev => ({
+            ...prev,
+            user: null,
+            session: null,
+            isAdmin: false,
+            isAdminMode: false,
+            authLoading: false,
+          }));
+        }
+      }
+    );
+
+    // Get initial session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const user = session?.user ?? null;
+      
+      if (user) {
+        const isAdmin = await checkAdminRole(user.id);
+        setState(prev => ({
+          ...prev,
+          user,
+          session,
+          isAdmin,
+          authLoading: false,
+        }));
+      } else {
+        setState(prev => ({ ...prev, authLoading: false }));
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [checkAdminRole]);
 
   // Fetch config from database on mount
   useEffect(() => {
@@ -257,14 +343,18 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  // Admin access is now permanent - no birthday date restriction
   const canAccessAdmin = useCallback((): boolean => {
-    return true;
-  }, []);
+    return state.isAdmin;
+  }, [state.isAdmin]);
 
   const setAdminMode = useCallback((value: boolean) => {
+    // Only allow admin mode if user is authenticated admin
+    if (value && !state.isAdmin) {
+      console.warn("Cannot enable admin mode: user is not an admin");
+      return;
+    }
     setState(prev => ({ ...prev, isAdminMode: value, isPreviewMode: false }));
-  }, []);
+  }, [state.isAdmin]);
 
   const setPreviewMode = useCallback((value: boolean) => {
     // Preview mode is disabled after birthday
@@ -275,7 +365,70 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
     setState(prev => ({ ...prev, isPreviewMode: value, isAdminMode: false }));
   }, [state.config.birthdayDate]);
 
+  const signIn = useCallback(async (email: string, password: string): Promise<{ error: string | null }> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      if (data.user) {
+        const isAdmin = await checkAdminRole(data.user.id);
+        if (!isAdmin) {
+          await supabase.auth.signOut();
+          return { error: "You don't have admin access. Please contact the site owner." };
+        }
+      }
+
+      return { error: null };
+    } catch (err) {
+      return { error: "An unexpected error occurred" };
+    }
+  }, [checkAdminRole]);
+
+  const signUp = useCallback(async (email: string, password: string): Promise<{ error: string | null }> => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin,
+        },
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { error: null };
+    } catch (err) {
+      return { error: "An unexpected error occurred" };
+    }
+  }, []);
+
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut();
+    setState(prev => ({
+      ...prev,
+      isAdminMode: false,
+      isPreviewMode: false,
+      user: null,
+      session: null,
+      isAdmin: false,
+    }));
+  }, []);
+
   const updateConfig = useCallback(async (updates: Partial<SiteConfig>) => {
+    // Only allow updates if user is admin
+    if (!state.isAdmin) {
+      console.error("Cannot update config: user is not an admin");
+      return;
+    }
+
     // Optimistically update local state
     setState(prev => ({
       ...prev,
@@ -299,9 +452,14 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setState(prev => ({ ...prev, isSyncing: false }));
     }
-  }, []);
+  }, [state.isAdmin]);
 
   const resetConfig = useCallback(async () => {
+    if (!state.isAdmin) {
+      console.error("Cannot reset config: user is not an admin");
+      return;
+    }
+
     setState(prev => ({
       ...prev,
       config: defaultConfig,
@@ -323,7 +481,7 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setState(prev => ({ ...prev, isSyncing: false }));
     }
-  }, []);
+  }, [state.isAdmin]);
 
   const clearWishVault = useCallback(() => {
     localStorage.removeItem("dristi_birthday_wish_2025");
@@ -339,6 +497,9 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
         resetConfig,
         clearWishVault,
         canAccessAdmin,
+        signIn,
+        signUp,
+        signOut,
       }}
     >
       {children}
@@ -352,12 +513,4 @@ export const useAdmin = () => {
     throw new Error("useAdmin must be used within AdminProvider");
   }
   return context;
-};
-
-export const validateAdminCode = (code: string): boolean => {
-  return code === ADMIN_CODE;
-};
-
-export const validatePreviewCode = (code: string): boolean => {
-  return code === PREVIEW_CODE;
 };

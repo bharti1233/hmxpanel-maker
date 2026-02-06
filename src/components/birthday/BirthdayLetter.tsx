@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import DOMPurify from "dompurify";
 
 interface LetterParagraph {
   id: string;
@@ -20,6 +21,15 @@ const defaultParagraphs: LetterParagraph[] = [
   { id: "4", content: "May this year bring you new adventures, exciting opportunities, and moments that you'll never forget. Because honestly, you deserve nothing less than the absolute best. 🌟" },
   { id: "5", content: "Keep shining, keep smiling, and never forget that your friends will always be here to cheer you on. 💖" },
 ];
+
+// Sanitize HTML content to prevent XSS attacks
+const sanitizeContent = (html: string): string => {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['strong', 'em', 'br', 'p', 'b', 'i'],
+    ALLOWED_ATTR: ['class'],
+    KEEP_CONTENT: true,
+  });
+};
 
 const BirthdayLetter = ({ 
   recipientName = "Dristi", 
@@ -70,9 +80,11 @@ const BirthdayLetter = ({
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 + index * 0.1 }}
                 dangerouslySetInnerHTML={{ 
-                  __html: paragraph.content
+                  __html: sanitizeContent(paragraph.content)
                     .replace(/<strong>/g, '<strong class="text-birthday-pink">')
                     .replace(/<em>/g, '<em class="text-birthday-gold">')
+                    .replace(/<b>/g, '<strong class="text-birthday-pink">')
+                    .replace(/<i>/g, '<em class="text-birthday-gold">')
                 }}
               />
             ))}
