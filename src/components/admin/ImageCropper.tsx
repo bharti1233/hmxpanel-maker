@@ -5,6 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Check, X, ZoomIn, RotateCw, Square, RectangleHorizontal, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 interface ImageCropperProps {
   imageUrl: string;
@@ -47,7 +48,7 @@ const urlToDataUrl = async (url: string): Promise<string> => {
     });
   } catch (error) {
     // If CORS fails, try loading via img element (works for same-origin)
-    console.warn("CORS fetch failed, trying canvas approach:", error);
+    logger.warn("CORS fetch failed, trying canvas approach:", error);
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
@@ -212,7 +213,7 @@ const ImageCropper = ({
           setIsLoading(false);
         })
         .catch((err) => {
-          console.error("Failed to load image:", err);
+          logger.error("Failed to load image:", err);
           setImageError(true);
           setErrorMessage(
             "Unable to load this image for cropping. This might be due to CORS restrictions. " +
@@ -257,7 +258,7 @@ const ImageCropper = ({
       onCropComplete(publicUrl);
       onClose();
     } catch (error) {
-      console.error("Error cropping image:", error);
+      logger.error("Error cropping image:", error);
       setImageError(true);
       setErrorMessage(error instanceof Error ? error.message : "Failed to crop image. Please try again.");
     } finally {

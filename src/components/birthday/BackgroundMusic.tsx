@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Volume2, VolumeX, Music } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 interface BackgroundMusicProps {
   audioUrl: string;
@@ -43,7 +44,7 @@ const BackgroundMusic = ({ audioUrl }: BackgroundMusicProps) => {
         setIsPlaying(true);
       }
     } catch (error) {
-      console.log("Audio playback failed:", error);
+      logger.log("Audio playback failed:", error);
     }
   };
 

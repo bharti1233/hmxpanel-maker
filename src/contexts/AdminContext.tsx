@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
+import { logger } from "@/lib/logger";
 
 // Types
 export type MediaType = "none" | "image" | "video";
@@ -214,13 +215,13 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
         .maybeSingle();
 
       if (error) {
-        console.error("Error checking admin role:", error);
+        logger.error("Error checking admin role:", error);
         return false;
       }
 
       return !!data;
     } catch (err) {
-      console.error("Failed to check admin role:", err);
+      logger.error("Failed to check admin role:", err);
       return false;
     }
   }, []);
@@ -291,7 +292,7 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
           .maybeSingle();
 
         if (error) {
-          console.error("Error fetching config:", error);
+          logger.error("Error fetching config:", error);
           setState(prev => ({ ...prev, isLoading: false }));
           return;
         }
@@ -306,7 +307,7 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
           setState(prev => ({ ...prev, isLoading: false }));
         }
       } catch (err) {
-        console.error("Failed to fetch config:", err);
+        logger.error("Failed to fetch config:", err);
         setState(prev => ({ ...prev, isLoading: false }));
       }
     };
@@ -327,7 +328,7 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
           filter: "config_key=eq.main",
         },
         (payload) => {
-          console.log("Real-time update received:", payload);
+          logger.log("Real-time update received:", payload);
           if (payload.new) {
             setState(prev => ({
               ...prev,
@@ -350,7 +351,7 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
   const setAdminMode = useCallback((value: boolean) => {
     // Only allow admin mode if user is authenticated admin
     if (value && !state.isAdmin) {
-      console.warn("Cannot enable admin mode: user is not an admin");
+      logger.warn("Cannot enable admin mode: user is not an admin");
       return;
     }
     setState(prev => ({ ...prev, isAdminMode: value, isPreviewMode: false }));
@@ -425,7 +426,7 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
   const updateConfig = useCallback(async (updates: Partial<SiteConfig>) => {
     // Only allow updates if user is admin
     if (!state.isAdmin) {
-      console.error("Cannot update config: user is not an admin");
+      logger.error("Cannot update config: user is not an admin");
       return;
     }
 
@@ -445,10 +446,10 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
         .eq("config_key", "main");
 
       if (error) {
-        console.error("Error updating config:", error);
+        logger.error("Error updating config:", error);
       }
     } catch (err) {
-      console.error("Failed to sync config:", err);
+      logger.error("Failed to sync config:", err);
     } finally {
       setState(prev => ({ ...prev, isSyncing: false }));
     }
@@ -456,7 +457,7 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
 
   const resetConfig = useCallback(async () => {
     if (!state.isAdmin) {
-      console.error("Cannot reset config: user is not an admin");
+      logger.error("Cannot reset config: user is not an admin");
       return;
     }
 
@@ -474,10 +475,10 @@ export const AdminProvider = ({ children }: { children: ReactNode }) => {
         .eq("config_key", "main");
 
       if (error) {
-        console.error("Error resetting config:", error);
+        logger.error("Error resetting config:", error);
       }
     } catch (err) {
-      console.error("Failed to reset config:", err);
+      logger.error("Failed to reset config:", err);
     } finally {
       setState(prev => ({ ...prev, isSyncing: false }));
     }
