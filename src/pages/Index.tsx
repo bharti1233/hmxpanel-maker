@@ -25,6 +25,7 @@ const Index = () => {
 
   const [currentStep, setCurrentStep] = useState(0);
   const [isBirthdayUnlocked, setIsBirthdayUnlocked] = useState(false);
+  const [profileImageError, setProfileImageError] = useState(false);
 
   const BIRTHDAY_DATE = useMemo(() => new Date(config.birthdayDate), [config.birthdayDate]);
 
@@ -227,20 +228,18 @@ const Index = () => {
                 transition={{ duration: 2, repeat: Infinity }}
                 className="w-40 h-40 mx-auto mb-6 rounded-full overflow-hidden border-4 border-birthday-pink/30"
               >
-                <img
-                  src={config.profileImageUrl}
-                  alt={`${config.recipientName}'s photo`}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = "none";
-                    const parent = target.parentElement;
-                    if (parent) {
-                      parent.innerHTML = '<span class="text-6xl">👑</span>';
-                      parent.className += " flex items-center justify-center bg-gradient-to-br from-birthday-pink to-birthday-purple";
-                    }
-                  }}
-                />
+                {profileImageError ? (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-birthday-pink to-birthday-purple">
+                    <span className="text-6xl">👑</span>
+                  </div>
+                ) : (
+                  <img
+                    src={config.profileImageUrl}
+                    alt={`${config.recipientName}'s photo`}
+                    className="w-full h-full object-cover"
+                    onError={() => setProfileImageError(true)}
+                  />
+                )}
               </motion.div>
 
               <p className="text-muted-foreground mb-6">
