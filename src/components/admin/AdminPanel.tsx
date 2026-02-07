@@ -10,15 +10,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import MemoryTimelineEditor from "./MemoryTimelineEditor";
 import QuizEditor from "./QuizEditor";
+import RecipientManager from "./RecipientManager";
+import RecipientEditor from "./RecipientEditor";
 import {
   X, Save, Eye, RotateCcw, User, Calendar, Image, MessageSquare,
-  Layout, Cake, Heart, Trash2, Plus, GripVertical, Music, Link, Cloud, CloudOff, HelpCircle, LogOut
+  Layout, Cake, Heart, Trash2, Plus, GripVertical, Music, Link, Cloud, CloudOff, HelpCircle, LogOut, Users
 } from "lucide-react";
 
 const AdminPanel = () => {
   const { state, setAdminMode, setPreviewMode, updateConfig, resetConfig, clearWishVault, signOut } = useAdmin();
   const { config, isSyncing } = state;
   const [hasChanges, setHasChanges] = useState(false);
+  const [editingRecipientId, setEditingRecipientId] = useState<string | null>(null);
 
   const handleChange = <K extends keyof typeof config>(key: K, value: typeof config[K]) => {
     updateConfig({ [key]: value });
@@ -140,8 +143,12 @@ const AdminPanel = () => {
       {/* Content */}
       <ScrollArea className="h-[calc(100vh-65px)]">
         <div className="p-4 pb-24 max-w-4xl mx-auto">
-          <Tabs defaultValue="core" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-6">
+          <Tabs defaultValue="recipients" className="w-full">
+            <TabsList className="grid w-full grid-cols-6 mb-6">
+              <TabsTrigger value="recipients" className="gap-1 text-xs">
+                <Users className="w-3 h-3" />
+                Recipients
+              </TabsTrigger>
               <TabsTrigger value="core" className="gap-1 text-xs">
                 <User className="w-3 h-3" />
                 Core
@@ -163,6 +170,20 @@ const AdminPanel = () => {
                 Advanced
               </TabsTrigger>
             </TabsList>
+
+            {/* Recipients Management */}
+            <TabsContent value="recipients" className="space-y-6">
+              {editingRecipientId ? (
+                <RecipientEditor
+                  recipientId={editingRecipientId}
+                  onBack={() => setEditingRecipientId(null)}
+                />
+              ) : (
+                <RecipientManager
+                  onEditRecipient={(id) => setEditingRecipientId(id)}
+                />
+              )}
+            </TabsContent>
 
             {/* Core Details */}
             <TabsContent value="core" className="space-y-6">

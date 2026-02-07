@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      birthday_recipients: {
+        Row: {
+          background_music_url: string | null
+          birthday_date: string
+          cake_page_subtitle: string
+          cake_page_title: string
+          countdown_subtitle: string
+          countdown_title: string
+          created_at: string
+          created_by: string | null
+          final_reveal_message: string
+          id: string
+          instagram_link: string | null
+          letter_paragraphs: Json
+          letter_signature: string
+          letter_title: string
+          memories: Json
+          password_hash: string
+          profile_image_url: string | null
+          quiz_questions: Json
+          recipient_name: string
+          sender_name: string
+          show_final_reveal: boolean
+          show_memory_timeline: boolean
+          show_quiz: boolean
+          show_voice_message: boolean
+          show_wish_vault: boolean
+          slug: string
+          star_page_message: string
+          timezone: string
+          updated_at: string
+          voice_message_url: string | null
+        }
+        Insert: {
+          background_music_url?: string | null
+          birthday_date?: string
+          cake_page_subtitle?: string
+          cake_page_title?: string
+          countdown_subtitle?: string
+          countdown_title?: string
+          created_at?: string
+          created_by?: string | null
+          final_reveal_message?: string
+          id?: string
+          instagram_link?: string | null
+          letter_paragraphs?: Json
+          letter_signature?: string
+          letter_title?: string
+          memories?: Json
+          password_hash: string
+          profile_image_url?: string | null
+          quiz_questions?: Json
+          recipient_name?: string
+          sender_name?: string
+          show_final_reveal?: boolean
+          show_memory_timeline?: boolean
+          show_quiz?: boolean
+          show_voice_message?: boolean
+          show_wish_vault?: boolean
+          slug: string
+          star_page_message?: string
+          timezone?: string
+          updated_at?: string
+          voice_message_url?: string | null
+        }
+        Update: {
+          background_music_url?: string | null
+          birthday_date?: string
+          cake_page_subtitle?: string
+          cake_page_title?: string
+          countdown_subtitle?: string
+          countdown_title?: string
+          created_at?: string
+          created_by?: string | null
+          final_reveal_message?: string
+          id?: string
+          instagram_link?: string | null
+          letter_paragraphs?: Json
+          letter_signature?: string
+          letter_title?: string
+          memories?: Json
+          password_hash?: string
+          profile_image_url?: string | null
+          quiz_questions?: Json
+          recipient_name?: string
+          sender_name?: string
+          show_final_reveal?: boolean
+          show_memory_timeline?: boolean
+          show_quiz?: boolean
+          show_voice_message?: boolean
+          show_wish_vault?: boolean
+          slug?: string
+          star_page_message?: string
+          timezone?: string
+          updated_at?: string
+          voice_message_url?: string | null
+        }
+        Relationships: []
+      }
       site_config: {
         Row: {
           background_music_url: string | null
