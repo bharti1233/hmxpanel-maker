@@ -143,6 +143,63 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Mobile touch optimization */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .touch-action-pan-y {
+    touch-action: pan-y;
+  }
+
+  .touch-action-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Prevent text selection on touch elements */
+  .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Active state for touch feedback */
+  .touch-feedback {
+    transition: transform 0.1s ease, opacity 0.1s ease;
+  }
+
+  .touch-feedback:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+  }
+
+  /* Safe area padding for mobile */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Responsive text sizing */
+  .text-responsive-sm {
+    font-size: clamp(0.75rem, 2vw, 0.875rem);
+  }
+
+  .text-responsive-base {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+  }
+
+  .text-responsive-lg {
+    font-size: clamp(1rem, 3vw, 1.25rem);
+  }
+
+  .text-responsive-xl {
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+  }
 }
 
 /* Animations */

@@ -151,20 +151,20 @@ const RecipientManager = ({ onEditRecipient }: RecipientManagerProps) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 px-1">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Users className="w-5 h-5 text-birthday-pink" />
-          <h2 className="text-xl font-display font-bold">Birthday Recipients</h2>
+          <Users className="w-5 h-5 text-birthday-pink flex-shrink-0" />
+          <h2 className="text-lg md:text-xl font-display font-bold">Birthday Recipients</h2>
         </div>
         
         {!showCreateForm && (
           <Button 
             variant="birthday" 
-            size="sm" 
+            size="default"
             onClick={() => setShowCreateForm(true)}
-            className="gap-2"
+            className="gap-2 touch-target touch-feedback w-full sm:w-auto"
           >
             <Plus className="w-4 h-4" />
             Add Recipient
@@ -183,35 +183,37 @@ const RecipientManager = ({ onEditRecipient }: RecipientManagerProps) => {
           
           <form onSubmit={handleCreate} className="space-y-4">
             <div>
-              <Label>Recipient Name</Label>
+              <Label className="text-responsive-sm">Recipient Name</Label>
               <Input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="e.g., Sarah"
                 disabled={isCreating}
+                className="touch-target text-base"
               />
             </div>
 
             <div>
-              <Label>Password</Label>
+              <Label className="text-responsive-sm">Password</Label>
               <Input
                 type="text"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Create a simple password..."
                 disabled={isCreating}
+                className="touch-target text-base"
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Share this password with the recipient to unlock their experience
               </p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 type="submit"
                 variant="birthday"
                 disabled={isCreating || !newName.trim() || !newPassword.trim()}
-                className="gap-2"
+                className="gap-2 touch-target touch-feedback flex-1 sm:flex-initial"
               >
                 {isCreating ? (
                   <>
@@ -234,6 +236,7 @@ const RecipientManager = ({ onEditRecipient }: RecipientManagerProps) => {
                   setNewPassword("");
                 }}
                 disabled={isCreating}
+                className="touch-target touch-feedback flex-1 sm:flex-initial"
               >
                 Cancel
               </Button>
@@ -254,42 +257,43 @@ const RecipientManager = ({ onEditRecipient }: RecipientManagerProps) => {
           </p>
         </div>
       ) : (
-        <ScrollArea className="max-h-[500px]">
-          <div className="space-y-3">
+        <ScrollArea className="max-h-[60vh] md:max-h-[500px] smooth-scroll">
+          <div className="space-y-3 pr-1">
             {recipients.map((recipient) => (
               <motion.div
                 key={recipient.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="glass-card rounded-xl p-4"
+                className="glass-card rounded-xl p-4 touch-action-pan-y"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h4 className="font-display font-semibold text-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-display font-semibold text-base md:text-lg truncate">
                       {recipient.recipient_name}
                     </h4>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                    <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm text-muted-foreground mt-1">
                       <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
+                        <Calendar className="w-3 h-3 flex-shrink-0" />
                         {formatDate(recipient.birthday_date)}
                       </span>
-                      <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">
+                      <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded truncate max-w-[120px] sm:max-w-none">
                         /b/{recipient.slug}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2 justify-end">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => copyLink(recipient.slug)}
                       title="Copy link"
+                      className="touch-target touch-feedback h-10 w-10"
                     >
                       {copiedSlug === recipient.slug ? (
-                        <Check className="w-4 h-4 text-green-500" />
+                        <Check className="w-5 h-5 text-birthday-cyan" />
                       ) : (
-                        <Copy className="w-4 h-4" />
+                        <Copy className="w-5 h-5" />
                       )}
                     </Button>
                     <Button
@@ -297,25 +301,27 @@ const RecipientManager = ({ onEditRecipient }: RecipientManagerProps) => {
                       size="icon"
                       onClick={() => openLink(recipient.slug)}
                       title="Open in new tab"
+                      className="touch-target touch-feedback h-10 w-10"
                     >
-                      <ExternalLink className="w-4 h-4" />
+                      <ExternalLink className="w-5 h-5" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => onEditRecipient(recipient.id)}
                       title="Edit"
+                      className="touch-target touch-feedback h-10 w-10"
                     >
-                      <Settings className="w-4 h-4" />
+                      <Settings className="w-5 h-5" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(recipient.id)}
-                      className="text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive touch-target touch-feedback h-10 w-10"
                       title="Delete"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-5 h-5" />
                     </Button>
                   </div>
                 </div>
