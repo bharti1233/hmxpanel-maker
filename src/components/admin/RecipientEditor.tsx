@@ -10,9 +10,10 @@ import MemoryTimelineEditor from "./MemoryTimelineEditor";
 import QuizEditor from "./QuizEditor";
 import { MemoryItem, LetterParagraph, QuizQuestion } from "@/contexts/AdminContext";
 import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 import {
   ArrowLeft, Save, User, Calendar, Image, MessageSquare,
-  Layout, Cake, Heart, Trash2, Plus, GripVertical, Music, Link, Loader2
+  Layout, Cake, Heart, Trash2, Plus, GripVertical, Music, Link, Loader2, Key, ExternalLink
 } from "lucide-react";
 
 interface RecipientEditorProps {
@@ -52,6 +53,8 @@ interface RecipientData {
 const RecipientEditor = ({ recipientId, onBack }: RecipientEditorProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
   const [data, setData] = useState<RecipientData | null>(null);
 
   const fetchRecipient = useCallback(async () => {
@@ -132,6 +135,45 @@ const RecipientEditor = ({ recipientId, onBack }: RecipientEditorProps) => {
       logger.error("Failed to save recipient:", err);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!newPassword.trim() || newPassword.length < 4) {
+      toast.error("Password must be at least 4 characters");
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+
+    try {
+      const { data: response, error } = await supabase.functions.invoke("update-recipient-password", {
+        body: { recipientId, newPassword: newPassword.trim() },
+      });
+
+      if (error) {
+        logger.error("Error updating password:", error);
+        toast.error("Failed to update password");
+        return;
+      }
+
+      if (response.success) {
+        toast.success("Password updated successfully!");
+        setNewPassword("");
+      } else {
+        toast.error(response.error || "Failed to update password");
+      }
+    } catch (err) {
+      logger.error("Failed to update password:", err);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
+  const openRecipientLink = () => {
+    if (data) {
+      window.open(`/b/${data.slug}`, "_blank");
     }
   };
 
@@ -275,6 +317,66 @@ const RecipientEditor = ({ recipientId, onBack }: RecipientEditorProps) => {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Password Management */}
+          <div className="glass-card rounded-2xl p-4 md:p-6 space-y-4">
+            <h3 className="font-display font-semibold flex items-center gap-2 text-sm md:text-base">
+              <Key className="w-4 h-4 text-birthday-purple flex-shrink-0" />
+              Access Password
+            </h3>
+
+            <p className="text-xs md:text-sm text-muted-foreground">
+              Set or change the password recipients use to unlock their birthday experience.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                type="text"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password..."
+                className="touch-target text-base flex-1"
+              />
+              <Button
+                variant="outline"
+                onClick={handleUpdatePassword}
+                disabled={isUpdatingPassword || !newPassword.trim() || newPassword.length < 4}
+                className="gap-2 touch-target touch-feedback"
+              >
+                {isUpdatingPassword ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Key className="w-4 h-4" />
+                    Update Password
+                  </>
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Password must be at least 4 characters
+            </p>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="glass-card rounded-2xl p-4 md:p-6 space-y-4">
+            <h3 className="font-display font-semibold flex items-center gap-2 text-sm md:text-base">
+              <ExternalLink className="w-4 h-4 text-birthday-cyan flex-shrink-0" />
+              Quick Actions
+            </h3>
+
+            <Button
+              variant="outline"
+              onClick={openRecipientLink}
+              className="gap-2 touch-target touch-feedback w-full sm:w-auto"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Preview Recipient Experience
+            </Button>
           </div>
 
           <div className="glass-card rounded-2xl p-4 md:p-6 space-y-4">
