@@ -15,6 +15,7 @@ import WishVault from "@/components/birthday/WishVault";
 import BirthdayLetter from "@/components/birthday/BirthdayLetter";
 import FinalReveal from "@/components/birthday/FinalReveal";
 import BackgroundMusic from "@/components/birthday/BackgroundMusic";
+import BrandingFooter from "@/components/birthday/BrandingFooter";
 import { ChevronRight, ChevronLeft, Lock, KeyRound, Loader2 } from "lucide-react";
 
 type PageId = "countdown" | "star" | "memories" | "quiz" | "cake" | "letter" | "final";
@@ -184,6 +185,9 @@ const Birthday = () => {
               </Button>
             </form>
           </motion.div>
+
+          {/* Branding Footer */}
+          <BrandingFooter />
         </div>
       </div>
     );
@@ -532,6 +536,9 @@ const Birthday = () => {
       {isBirthdayUnlocked && config.background_music_url && (
         <BackgroundMusic audioUrl={config.background_music_url} />
       )}
+
+      {/* Branding Footer */}
+      <BrandingFooter />
     </div>
   );
 };
