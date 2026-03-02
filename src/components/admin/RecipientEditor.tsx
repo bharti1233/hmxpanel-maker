@@ -54,7 +54,9 @@ const RecipientEditor = ({ recipientId, onBack }: RecipientEditorProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [isUpdatingEditorPassword, setIsUpdatingEditorPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
+  const [editorPassword, setEditorPassword] = useState("");
   const [data, setData] = useState<RecipientData | null>(null);
 
   const fetchRecipient = useCallback(async () => {
@@ -168,6 +170,39 @@ const RecipientEditor = ({ recipientId, onBack }: RecipientEditorProps) => {
       toast.error("An unexpected error occurred");
     } finally {
       setIsUpdatingPassword(false);
+    }
+  };
+
+  const handleUpdateEditorPassword = async () => {
+    if (editorPassword.trim() && editorPassword.length < 4) {
+      toast.error("Password must be at least 4 characters");
+      return;
+    }
+
+    setIsUpdatingEditorPassword(true);
+
+    try {
+      const { data: response, error } = await supabase.functions.invoke("update-editor-password", {
+        body: { recipientId, editorPassword: editorPassword.trim() || null },
+      });
+
+      if (error) {
+        logger.error("Error updating editor password:", error);
+        toast.error("Failed to update editor password");
+        return;
+      }
+
+      if (response.success) {
+        toast.success(editorPassword.trim() ? "Editor password set!" : "Editor access removed!");
+        setEditorPassword("");
+      } else {
+        toast.error(response.error || "Failed to update editor password");
+      }
+    } catch (err) {
+      logger.error("Failed to update editor password:", err);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsUpdatingEditorPassword(false);
     }
   };
 
@@ -359,6 +394,49 @@ const RecipientEditor = ({ recipientId, onBack }: RecipientEditorProps) => {
             </div>
             <p className="text-xs text-muted-foreground">
               Password must be at least 4 characters
+            </p>
+          </div>
+
+          {/* Editor Password Management */}
+          <div className="glass-card rounded-2xl p-4 md:p-6 space-y-4">
+            <h3 className="font-display font-semibold flex items-center gap-2 text-sm md:text-base">
+              <Key className="w-4 h-4 text-birthday-cyan flex-shrink-0" />
+              Editor Access (Secondary Admin)
+            </h3>
+
+            <p className="text-xs md:text-sm text-muted-foreground">
+              Set a password to allow someone else to edit this recipient's page via the "HMXPANEL" badge on their birthday URL. Leave empty to disable editor access.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                type="text"
+                value={editorPassword}
+                onChange={(e) => setEditorPassword(e.target.value)}
+                placeholder="Set editor password..."
+                className="touch-target text-base flex-1"
+              />
+              <Button
+                variant="outline"
+                onClick={handleUpdateEditorPassword}
+                disabled={isUpdatingEditorPassword}
+                className="gap-2 touch-target touch-feedback"
+              >
+                {isUpdatingEditorPassword ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Key className="w-4 h-4" />
+                    {editorPassword.trim() ? "Set Editor Password" : "Remove Editor Access"}
+                  </>
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Password must be at least 4 characters. Clear the field and click to remove editor access.
             </p>
           </div>
 

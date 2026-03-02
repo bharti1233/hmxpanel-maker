@@ -1,1 +1,7 @@
 project_id = "xfjuujudowwipwvqiypp"
+
+[functions.verify-editor-password]
+verify_jwt = false
+
+[functions.update-recipient-by-editor]
+verify_jwt = false
