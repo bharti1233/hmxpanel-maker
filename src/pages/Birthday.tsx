@@ -16,6 +16,8 @@ import BirthdayLetter from "@/components/birthday/BirthdayLetter";
 import FinalReveal from "@/components/birthday/FinalReveal";
 import BackgroundMusic from "@/components/birthday/BackgroundMusic";
 import BrandingFooter from "@/components/birthday/BrandingFooter";
+import EditorLoginModal from "@/components/birthday/EditorLoginModal";
+import RecipientEditorPanel from "@/components/birthday/RecipientEditorPanel";
 import { ChevronRight, ChevronLeft, Lock, KeyRound, Loader2 } from "lucide-react";
 
 type PageId = "countdown" | "star" | "memories" | "quiz" | "cake" | "letter" | "final";
@@ -30,6 +32,9 @@ const Birthday = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isBirthdayUnlocked, setIsBirthdayUnlocked] = useState(false);
   const [profileImageError, setProfileImageError] = useState(false);
+  const [isEditorModalOpen, setIsEditorModalOpen] = useState(false);
+  const [isEditorMode, setIsEditorMode] = useState(false);
+  const [editorPassword, setEditorPassword] = useState("");
 
   // Check for cached session on mount
   useEffect(() => {
@@ -537,8 +542,34 @@ const Birthday = () => {
         <BackgroundMusic audioUrl={config.background_music_url} />
       )}
 
-      {/* Branding Footer */}
-      <BrandingFooter />
+      {/* Branding Footer - opens editor login */}
+      <BrandingFooter onEditorClick={() => setIsEditorModalOpen(true)} />
+
+      {/* Editor Login Modal */}
+      {slug && (
+        <EditorLoginModal
+          isOpen={isEditorModalOpen}
+          onClose={() => setIsEditorModalOpen(false)}
+          slug={slug}
+          onEditorLogin={(pw) => {
+            setEditorPassword(pw);
+            setIsEditorMode(true);
+          }}
+        />
+      )}
+
+      {/* Editor Panel */}
+      {isEditorMode && config && slug && (
+        <RecipientEditorPanel
+          config={config}
+          slug={slug}
+          editorPassword={editorPassword}
+          onClose={() => setIsEditorMode(false)}
+          onConfigUpdate={(updatedConfig) => {
+            // Update will reflect on next page load
+          }}
+        />
+      )}
     </div>
   );
 };

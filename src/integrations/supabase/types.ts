@@ -24,6 +24,7 @@ export type Database = {
           countdown_title: string
           created_at: string
           created_by: string | null
+          editor_password_hash: string | null
           final_reveal_message: string
           id: string
           instagram_link: string | null
@@ -56,6 +57,7 @@ export type Database = {
           countdown_title?: string
           created_at?: string
           created_by?: string | null
+          editor_password_hash?: string | null
           final_reveal_message?: string
           id?: string
           instagram_link?: string | null
@@ -88,6 +90,7 @@ export type Database = {
           countdown_title?: string
           created_at?: string
           created_by?: string | null
+          editor_password_hash?: string | null
           final_reveal_message?: string
           id?: string
           instagram_link?: string | null

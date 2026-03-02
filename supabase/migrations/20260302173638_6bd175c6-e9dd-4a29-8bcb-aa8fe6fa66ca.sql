@@ -1,0 +1,1 @@
+ALTER TABLE public.birthday_recipients ADD COLUMN editor_password_hash text DEFAULT NULL;
